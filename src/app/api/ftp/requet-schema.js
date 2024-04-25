@@ -5,9 +5,9 @@ const createSen = (fieldName) => {
 }
 
 const mainParmas = {
-    host: z.string({required_error: createSen("host")}),
-    user: z.string({required_error: createSen("user")}),
-    pass: z.string({required_error: createSen("pass")}),
+    host: z.string({required_error: createSen("host")}).nonempty(),
+    user: z.string({required_error: createSen("user")}).nonempty(),
+    pass: z.string({required_error: createSen("pass")}).nonempty(),
 }
 
 export const renameSchema = z.object({

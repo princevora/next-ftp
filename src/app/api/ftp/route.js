@@ -55,7 +55,7 @@ export async function POST(request) {
                 message: "Please Check your provided fields Or Provide Required Fields",
                 errors_for: errMap
             }, 400, true)
-        );
+        , 400);
     }
 
     const { host, user, pass, path = "/" } = response.data;

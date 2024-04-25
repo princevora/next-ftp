@@ -7,6 +7,8 @@ import {
 } from "@material-tailwind/react";
 import FormSkeleton from "@/components/skeletons/form-skeleton";
 import ImportHotToast from '@/components/import-toaster';
+import CryptoJs from "crypto-js";
+import { usePasswordContext } from '@/context/encrypt-password';
 
 const FtpForm = () => {
     const [formData, setFormData] = useState({
@@ -14,14 +16,21 @@ const FtpForm = () => {
         ftp_username: "",
         ftp_password: "",
         isSubmitted: false,
-        formHidden: true
+        formHidden: true,
+        encryptedData: ""
     });
 
-    // useEffect(() => {
-    //     setTimeout(() => {
-    //         setFormData(prevState => ({ ...prevState, formHidden: false }));
-    //     }, 900);
-    // }, []);
+    const password = usePasswordContext();
+
+    useEffect(() => {
+        const timeoutId =  setTimeout(() => {
+            setFormData(prevState => ({ ...prevState, formHidden: false }));
+        }, 900);
+
+        return () => {
+            clearTimeout(timeoutId);
+        }
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,21 +39,20 @@ const FtpForm = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setFormData(prevState => ({ ...prevState, isSubmitted: true }));
+        const {ftp_host, ftp_username, ftp_password} = formData;
+        const data = {ftp_host, ftp_username, ftp_password};
+        let eData = CryptoJs.AES.encrypt(JSON.stringify(data), password).toString(); //Encrypted Form Of Data
+
+        setFormData(prevState => ({ ...prevState, isSubmitted: true, encryptedData: eData }));
     }
 
     return (
         <>
             <ImportHotToast />
           
-            {!formData.isSubmitted ? (
+            {formData.isSubmitted? (
                 <Connect
-                    ftp_host="ftpupload.net"
-                    ftp_username="epiz_32392405"
-                    ftp_password="62mNeNsZfkUe"
-                    // ftp_host="files.000webhost.com"
-                    // ftp_username="two-a-penny-buses"
-                    // ftp_password="Princevora2007@"
+                    data={formData.encryptedData}
                 />
             ) : (
                 <header className="mt-5 bg-white p-8">

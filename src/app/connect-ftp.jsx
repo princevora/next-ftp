@@ -13,51 +13,56 @@ import FtpErrors from "@/components/errors/errors";
 import Action from "@/components/errors/errors-speed-dial"
 import TableData from "@/components/table-data";
 import toast from 'react-hot-toast';
-import path from 'path';
+import path, { resolve } from 'path';
+import { usePasswordContext } from '@/context/encrypt-password';
+import CryptoJs from "crypto-js";
 
 const Connect = (props) => {
 
   const context = useContext(RenameItemContext);
   const errorContext = useContext(ErrorContext);
   const rContext = useContext(RenameConfirmationContext); //Rename confirmation context
-
+  const renameInputRef = useRef(null);
+  const ftpDetailsContext = useFtpDetailsContext();
+  const password = usePasswordContext();
+  
   const apiEndpoint = "/api/ftp";
 
   const [state, setState] = useState({
-    ftp_host: props.ftp_host,
-    ftp_username: props.ftp_username,
-    ftp_password: props.ftp_password,
+    ftp_host: "",
+    ftp_username: "",
+    ftp_password: "",
     is_table_hidden: null,
     ftp_files: null,
     ftp_path: "/",
     searchPath: "/",
-    ftp_errors_collapse_open: false,
-    ftp_errors: [
-      "Cant Connect to your ftp server",
-      "Unable to connect to ftp",
-      "provided fields are empty",
-      "Rename name must not be empty",
-      "Please select files to delete",
-    ]
   });
 
-  const renameInputRef = useRef(null);
-
-  const ftpDetailsContext = useFtpDetailsContext();
-
-  let ftpParams = {
-    host: state.ftp_host,
-    user: state.ftp_username,
-    pass: state.ftp_password,
-    action: "fetch",
-  };
+  let ftpParams;
 
   useEffect(() => {
+    // Get password And data from context and props and decrypt it.
+    const data = CryptoJs.AES.decrypt(props.data, password);
+
+    // Get utf8 string and parse the json recived.
+    const json = JSON.parse(data.toString(CryptoJs.enc.Utf8));
+    const {ftp_host, ftp_username, ftp_password} = json;
+    
+    // Set the data
+    setState({...state, ftp_host, ftp_username, ftp_password,});
+
+    // Set the FtpParams That will be used in Https Requests.
+    ftpParams = {
+      host: state.ftp_host,
+      user: state.ftp_username,
+      pass: state.ftp_password,
+      action: "fetch", //Default to fetch action
+    };
 
     const handleFetchFiles = (data) => {
-      
+
       const path = data.detail.path ?? '/';
-      
+
       loadFiles(path);
     }
 
@@ -82,20 +87,35 @@ const Connect = (props) => {
     }));
   }, [state.ftp_path]);
 
-  const loadFiles = (path) => {
+  const loadFiles = async (path) => {
 
     // Show Toaster and load the files too.
-    toast.promise(
-      fetchFileData(path ?? state.ftp_path),
+    const response = fetchFileData(path ?? state.ftp_path);
+
+    await toast.promise(
+      response,
       {
         loading: "Fetching Files",
         success: "Files Loaded Successfully",
-        error: "Unable to Load files"
+        error: (err) => err
       }
     )
+
+    response.then((rsp) => {
+      setState(prevState => (
+        {
+          ...prevState,
+          is_table_hidden: false,
+          searchPath: path,
+          ftp_files: rsp
+        })
+      );
+    })
+
   }
 
-  const fetchFileData = async (path = "/") => {
+  const fetchFileData = (path = "/") => new Promise(async  (resolve, reject) => {
+
     if (path === "") path = "/";
 
     setState(prevState => (
@@ -127,19 +147,12 @@ const Connect = (props) => {
         return b.type - a.type;
       });
 
-      setState(prevState => (
-        {
-          ...prevState,
-          is_table_hidden: false,
-          searchPath: path,
-          ftp_files: sorted
-        })
-      );
+      resolve(sorted)
 
     } catch (error) {
-      toast.error("Unable to complete the request" + error);
+      reject("Unable to complete the request please check your inputs");
     }
-  };
+  })
 
   const handePath = (folderPath) => {
     let followingPath = path.join(state.ftp_path, folderPath);
@@ -265,21 +278,14 @@ const Connect = (props) => {
 
   return (
     <header className="relative max-w-[1000px] mx-auto mt-5 columns-auto bg-white p-8">
-      {
-        state.ftp_errors &&
-        <Action />
-      }
       <div className="mx-auto">
-        <Collapse open={errorContext.state}>
-          <FtpErrors title="The Below Ftp Errors Were Occurred." errors={state.ftp_errors} />
-        </Collapse>
         <div className="mx-auto pt-12 pb-24  text-center">
           <Card className='mx-auto shadow-xl'>
             {!state.is_table_hidden && state.ftp_files ? (
               <>
                 <SearchPath currentPath={state.searchPath} handleChange={handleSearchPath} handleClick={handleSearch} />
                 <div className="flex justify-end p-4">
-                  <CreateItem/>
+                  <CreateItem />
                 </div>
                 <Card className="h-auto w-full overflow-scroll md:overflow-hidden">
                   <TableData
