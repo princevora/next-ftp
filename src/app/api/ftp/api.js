@@ -78,38 +78,57 @@ const renameFtpFile = (from, to) => new Promise((resolve, reject) => {
     })
 })
 
-export const createItem = ({ type, name }) => new Promise((resolve, reject) => {
+const checkExists = (filePath) => new Promise((resolve, reject) => {
+    ftp.raw("SIZE", filePath, (err, data) => {
+        if (!err) {
+            const size = parseInt(data.text.slice(4));
+            resolve(size);
+        }
+        else {
+            reject(false);
+        }
+    })
+})
 
-    if(typeof type !== 'number' && ![0, 1].includes(type)){
+export const createItem = ({ type, name }) => new Promise(async (resolve, reject) => {
+
+    if (typeof type !== 'number' && ![0, 1].includes(type)) {
         return reject(sendObjRes("Invalid file type. Type must be 0 for file or 1 for directory.", 400, true));
     }
 
     if (type === 0) {
-        const emptyBuffer = Buffer.from('');
 
-        ftp.put(emptyBuffer, name, err => {
-            if (err) {
-                return reject(sendObjRes(err.message, err.status, true));
-            }
+        try {
+            // check if file exists 
+            const isAvailable = await checkExists(name)
 
-            return resolve(sendObjRes("File has been successfully created.", 200));
-        })
+            reject(sendObjRes("The File Already Exists", 550, true));
+
+        } catch (error) { //Catching the error means the file doesnt exists as our promise returned `false` as rejection
+            const emptyBuffer = Buffer.from('');
+
+            ftp.put(emptyBuffer, name, err => {
+                if (err) {
+                    reject(sendObjRes(err.message, err.status, true));
+                }
+                else {
+                    resolve(sendObjRes({ message: "File has been successfully created." }, 200));
+                }
+            })
+        }
+
     }
-    else if(type === 1){
+    else if (type === 1) {
         ftp.raw("mkd", name, (err, data) => {
-            if(err){
-                return reject(sendObjRes(err, 400, true));
+            if (err) {
+                reject(sendObjRes(err.message, err.code, true));
             }
 
-            return resolve(sendObjRes("New directory has been successfully created.", data.code))
+            resolve(sendObjRes({ message: "New directory has been successfully created." }, data.code))
         })
     }
 })
 
-
-export const checkAvailability = () => {
-
-}
 
 export const renameFile = async ({ from, to }) => {
 
@@ -120,7 +139,7 @@ export const ftpDestroy = () => {
     return ftp.destroy();
 }
 
-function sendObjRes(data, status, isErr = false) {
+export function sendObjRes(data, status, isErr = false) {
 
     const base = {
         success: !isErr,

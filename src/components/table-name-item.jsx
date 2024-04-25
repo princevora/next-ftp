@@ -36,7 +36,7 @@ const TableNameItem = (props) => {
     const nameWithLink = (name, type) => {
         return (
             <>
-                <ItemIcon fileName={name} fileType={type} />
+                <ItemIcon fileName={name} fileType={type}/>
                 <Typography variant="small" color="blue-gray" className="font-normal px-2">
                     <a href='#' onClick={() => props.handleChangePath(name)}>
                         {printName(name)}
@@ -50,7 +50,7 @@ const TableNameItem = (props) => {
         return (
             <>
                 <ItemIcon fileName={name} fileType={type} />
-                <Typography variant="small" color="blue-gray" className="font-normal px-2">
+                <Typography variant="small" as="a" color="blue-gray" className="font-normal px-2">
                     {printName(name)}
                 </Typography>
             </>

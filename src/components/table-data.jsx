@@ -10,6 +10,8 @@ import FilePermsDialog from "@/components/dialogs/file-permissions-dialog";
 import TableNameItem from "@/components/table-name-item";
 import RenameItem from "./table-action-components/rename-item";
 import { RenameItemContext } from '../context/renameItem/RenameItemContext';
+import PreviousPath from "./table-action-components/previous-path";
+import path from 'path';
 
 const TableData = (props) => {
 
@@ -28,6 +30,10 @@ const TableData = (props) => {
             renamingName: "" //Used to track the state of rename input
         }
     });
+
+    const currentPath = props.currentPath;
+    const parentPath = path.dirname(currentPath);
+    // console.log(parentPath.root);
 
     const handleClick = (filename, perms) => {
         setState(prevState => ({
@@ -133,6 +139,12 @@ const TableData = (props) => {
                     </tr>
                 </thead>
                 <tbody className='max-w-full'>
+                    {
+                        currentPath !== "." && currentPath !== "/" && 
+
+                        // previousPath={}
+                        <PreviousPath previousPath={parentPath}/>
+                    }
                     {props.data.map((file) => (
                         <tr key={file.name} className="even:bg-blue-gray-50/50 hover:bg-blue-gray-50 duration-[1.1s]">
                             <td>

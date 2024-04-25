@@ -14,6 +14,7 @@ export default function ImportHotToast() {
                 className: '',
                 duration: 5000,
                 style: {
+                    zIndex: 9999,
                     background: '#363636',
                     color: '#fff',
                 },

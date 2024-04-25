@@ -9,19 +9,10 @@ export const useCreateItemContext = () => {
 }
 
 const CreateItemContextProvider = ({ children }) => {
-    
-    const handleSetItemName = (data) => {
-        setState(data);
-    };
-    
-    const [state, setState] = useState({
-        type: 1,
-        itemName: "",
-        isVisible: false //handle open for Dialog-modal
-    });
+    const [isVisible, setIsVisible] = useState(false);
 
     return (
-        <CreateItemContext.Provider value={{state, setState}}>
+        <CreateItemContext.Provider value={{isVisible, setIsVisible}}>
             {children}
         </CreateItemContext.Provider>
     );

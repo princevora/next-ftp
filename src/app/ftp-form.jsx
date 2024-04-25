@@ -6,7 +6,7 @@ import {
     Typography
 } from "@material-tailwind/react";
 import FormSkeleton from "@/components/skeletons/form-skeleton";
-import RenameItemContextProvider from "@/context/renameItem/RenameItemContext";
+import ImportHotToast from '@/components/import-toaster';
 
 const FtpForm = () => {
     const [formData, setFormData] = useState({
@@ -34,7 +34,9 @@ const FtpForm = () => {
     }
 
     return (
-        <RenameItemContextProvider>
+        <>
+            <ImportHotToast />
+          
             {!formData.isSubmitted ? (
                 <Connect
                     ftp_host="ftpupload.net"
@@ -66,7 +68,7 @@ const FtpForm = () => {
                     </div>
                 </header>
             )}
-        </RenameItemContextProvider>
+        </>
     );
 }
 

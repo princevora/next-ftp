@@ -9,15 +9,10 @@ import { useCreateItemContext } from "@/context/create-item/create-item";
 function CreateItem() {
     const context = useCreateItemContext();
 
-    const handleClick = () => {
-        context.setState(prev => ({
-            ...prev,
-            isVisible: !prev.isVisible
-        }))        
-    }
+    const handleClick = () => context.setIsVisible(prev => !prev.isVisible);        
 
     return (
-        <Typography as="a" href="Javascript:void(0);" variant="small" color="blue-gray" className="text-xl font-medium">
+        <Typography as="a" href="#" variant="small" color="blue-gray" className="text-xl p-2 font-medium bg-gray-200 rounded">
             <PlusIcon
                 onClick={handleClick}
                 height={15}

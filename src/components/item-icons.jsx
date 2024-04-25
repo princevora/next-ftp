@@ -1,12 +1,19 @@
 export default function ItemIcon({ fileType, fileName }) {
-
     if (fileType === 1) {
-        return <Icon className="fa-solid fa-folder" />
+        return <Icon className="fa-solid fa-folder" />;
     }
 
     const EXTENSION = fileName.split(".").pop();
-    const imageIconClass = 'fa-solid fa-file-image';
-    const codeIconClass = 'fa fa-solid fa-file-code';
+
+    // Define common classes
+    const imageIconClass = 'fas fa-image';
+    const codeIconClass = 'fas fa-file-code';
+    const fileArchiveIconClass = 'fas fa-file-archive';
+    const fileAudioIconClass = 'fas fa-file-audio';
+    const fileVideoIconClass = 'fas fa-file-video';
+    const fileWordIconClass = 'fas fa-file-word';
+    const fileExcelIconClass = 'fas fa-file-excel';
+    const filePowerPointIconClass = 'fas fa-file-powerpoint';
 
     const MIME = {
         "ico": imageIconClass,
@@ -23,16 +30,16 @@ export default function ItemIcon({ fileType, fileName }) {
         "raw": imageIconClass,
         "indd": imageIconClass,
         "ai": imageIconClass,
-        "pdf": imageIconClass,
-        "psd": imageIconClass,
+        "pdf": "fas fa-file-pdf",
+        "psd": "fas fa-file-image",
         "svgz": imageIconClass,
-        "webm": imageIconClass,
+        "webm": "fas fa-file-video",
         "tga": imageIconClass,
-        "css": codeIconClass,
-        "scss": codeIconClass,
-        "sass": codeIconClass,
-        "less": codeIconClass,
-        "html": codeIconClass,
+        "css": "fab fa-css3-alt",
+        "scss": "fab fa-sass",
+        "sass": "fab fa-sass",
+        "less": "fab fa-less",
+        "html": "fab fa-html5",
         "xml": codeIconClass,
         "rss": codeIconClass,
         "yaml": codeIconClass,
@@ -45,7 +52,7 @@ export default function ItemIcon({ fileType, fileName }) {
         "jsp": codeIconClass,
         "erb": codeIconClass,
         "jsx": codeIconClass,
-        "coffee": codeIconClass,
+        "coffee": "fas fa-coffee",
         "handlebars": codeIconClass,
         "swift": codeIconClass,
         "scala": codeIconClass,
@@ -62,31 +69,31 @@ export default function ItemIcon({ fileType, fileName }) {
         "powershell": codeIconClass,
         "r": codeIconClass,
         "elixir": codeIconClass,
-        "csv": codeIconClass,
-        "tsv": codeIconClass,
-        "rtf": codeIconClass,
-        "ods": codeIconClass,
-        "odt": codeIconClass,
-        "md": codeIconClass,
-        "markdown": codeIconClass,
-        "txt": codeIconClass,
-        "log": codeIconClass,
+        "csv": "fas fa-file-csv",
+        "tsv": "fas fa-file-csv",
+        "rtf": "fas fa-file-alt",
+        "ods": "fas fa-file-excel",
+        "odt": "fas fa-file-word",
+        "md": "fas fa-file-alt",
+        "markdown": "fas fa-file-alt",
+        "txt": "fas fa-file-alt",
+        "log": "fas fa-file-alt",
         "htaccess": codeIconClass,
-        "php": codeIconClass,
-        "java": codeIconClass,
+        "php": "fab fa-php",
+        "java": "fab fa-java",
         "sh": codeIconClass,
         "ini": codeIconClass,
         "cfg": codeIconClass,
-        "nfo": codeIconClass,
-        "asc": codeIconClass,
+        "nfo": "fas fa-file-alt",
+        "asc": "fas fa-file-alt",
         "json": codeIconClass,
         "c": codeIconClass,
         "cpp": codeIconClass,
         "cs": codeIconClass,
-        "py": codeIconClass,
+        "py": "fab fa-python",
         "rb": codeIconClass,
         "pl": codeIconClass,
-        "sql": codeIconClass,
+        "sql": "fas fa-database",
         "asm": codeIconClass,
         "ino": codeIconClass,
         "ts": codeIconClass,
@@ -98,6 +105,8 @@ export default function ItemIcon({ fileType, fileName }) {
         "gitignore": codeIconClass,
         "rs": codeIconClass,
         "map": codeIconClass,
+        "js": "fab fa-js",
+        "ts": "fas fa-t",
         "lock": codeIconClass,
         "dtd": codeIconClass,
         "tmp": codeIconClass,
@@ -106,36 +115,36 @@ export default function ItemIcon({ fileType, fileName }) {
         "dat": codeIconClass,
         "bak": codeIconClass,
         "htpasswd": codeIconClass,
-        "zip": "fa-solid fa-file-archive",
-        "tar": "fa-solid fa-file-archive",
-        "gz": "fa-solid fa-file-archive",
-        "bz2": "fa-solid fa-file-archive",
-        "7z": "fa-solid fa-file-archive",
-        "rar": "fa-solid fa-file-archive",
-        "mp3": "fa-solid fa-file-audio",
-        "wav": "fa-solid fa-file-audio",
-        "ogg": "fa-solid fa-file-audio",
-        "flac": "fa-solid fa-file-audio",
-        "aac": "fa-solid fa-file-audio",
-        "mp4": "fa-solid fa-file-video",
-        "avi": "fa-solid fa-file-video",
-        "mkv": "fa-solid fa-file-video",
-        "mov": "fa-solid fa-file-video",
-        "wmv": "fa-solid fa-file-video",
-        "flv": "fa-solid fa-file-video",
-        "doc": "fa-solid fa-file-word",
-        "docx": "fa-solid fa-file-word",
-        "xls": "fa-solid fa-file-excel",
-        "xlsx": "fa-solid fa-file-excel",
-        "ppt": "fa-solid fa-file-powerpoint",
-        "pptx": "fa-solid fa-file-powerpoint"
+        "zip": fileArchiveIconClass,
+        "tar": fileArchiveIconClass,
+        "gz": fileArchiveIconClass,
+        "bz2": fileArchiveIconClass,
+        "7z": fileArchiveIconClass,
+        "rar": fileArchiveIconClass,
+        "mp3": fileAudioIconClass,
+        "wav": fileAudioIconClass,
+        "ogg": fileAudioIconClass,
+        "flac": fileAudioIconClass,
+        "aac": fileAudioIconClass,
+        "mp4": fileVideoIconClass,
+        "avi": fileVideoIconClass,
+        "mkv": fileVideoIconClass,
+        "mov": fileVideoIconClass,
+        "wmv": fileVideoIconClass,
+        "flv": fileVideoIconClass,
+        "doc": fileWordIconClass,
+        "docx": fileWordIconClass,
+        "xls": fileExcelIconClass,
+        "xlsx": fileExcelIconClass,
+        "ppt": filePowerPointIconClass,
+        "pptx": filePowerPointIconClass
     };
 
-    const ICON = MIME[EXTENSION] ?? "fa fa-solid fa-file-code";
+    const ICON = MIME[EXTENSION] ?? codeIconClass;
 
     return <Icon className={ICON} />;
 }
 
 function Icon({ className }) {
-    return <i className={className} />
+    return <i className={className} />;
 }

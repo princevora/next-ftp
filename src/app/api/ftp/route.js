@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { connectLogin, fetchFiles, ftpDestroy, setFtpConfig, createItem, renameFile } from './api';
+import { connectLogin, fetchFiles, ftpDestroy, setFtpConfig, createItem, renameFile, sendObjRes } from './api';
 import { renameSchema, fetchSchema, createSchema } from "./requet-schema";
 
 const VALID_ACTIONS = {
@@ -26,13 +26,13 @@ export async function POST(request) {
 
     const data = await request.json()
         .catch((e) => {
-            return sendResponse({ error: { message: "Please check your provided fields." } }, 400);
+            return sendResponse(sendObjRes({ error: { message: "Please check your provided fields." } }, 400, true), 400);
         });
 
     const actionResponse = actionSchema.safeParse(data);
 
     if (!actionResponse.success) {
-        return sendResponse({ error: { message: "Please Provide an action to complete the request." } }, 400)
+        return sendResponse(sendObjRes({ error: { message: "Please Provide an action to complete the request." } }, 400, true), 400)
     }
 
     // If everything is well then get a response from the request schema
@@ -51,12 +51,10 @@ export async function POST(request) {
         })
 
         return sendResponse(
-            {
-                error: {
-                    message: "Please Check your provided fields Or Provide Required Fields",
-                    errors_for: errMap
-                }
-            }, 400
+            sendObjRes({
+                message: "Please Check your provided fields Or Provide Required Fields",
+                errors_for: errMap
+            }, 400, true)
         );
     }
 
@@ -82,7 +80,7 @@ export async function POST(request) {
 
         if (responseData.success) {
             await ftpDestroy(); //Destroy Ftp connection
-            return sendResponse(responseData);
+            return sendResponse(responseData, responseData.status ?? 200);
         }
 
         throw new Error(responseData)
@@ -102,6 +100,7 @@ async function validateAction(action) {
         }
     });
 }
+
 
 /**
  * 

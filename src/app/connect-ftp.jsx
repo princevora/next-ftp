@@ -2,18 +2,18 @@ import { RenameConfirmationContext } from '@/context/renameItem/RenameConfirmati
 import { ErrorContext } from '@/context/ftperrors-collapse/errors-collapse-context';
 import { RenameItemContext } from "@/context/renameItem/RenameItemContext";
 import { Card, Collapse, Tooltip, IconButton } from '@material-tailwind/react';
+import { useFtpDetailsContext } from '@/context/ftp-details-context';
 import RenameConfirmation from "@/components/dialogs/rename-confirmation";
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import TableSkeleton from "@/components/skeletons/table-skeleton";
 import SearchPath from "@/components/tableDataHeader/search-path";
 import CreateItem from "@/components/tableDataHeader/create-item";
-import ImportHotToast from "@/components/import-toaster"
+import CreateItemDialog from "@/components/dialogs/create-item";
 import FtpErrors from "@/components/errors/errors";
 import Action from "@/components/errors/errors-speed-dial"
 import TableData from "@/components/table-data";
 import toast from 'react-hot-toast';
 import path from 'path';
-import CreateItemDialog from "@/components/dialogs/create-item";
 
 const Connect = (props) => {
 
@@ -43,26 +43,66 @@ const Connect = (props) => {
 
   const renameInputRef = useRef(null);
 
+  const ftpDetailsContext = useFtpDetailsContext();
+
   let ftpParams = {
     host: state.ftp_host,
     user: state.ftp_username,
     pass: state.ftp_password,
-    action: "fetch"
+    action: "fetch",
   };
 
   useEffect(() => {
-    fetchFileData(state.ftp_path);
 
-    // const fileExt = "htdocs/ppafas.PSDS";
-    // console.log(fileExt.split(".").pop().toLowerCase());
+    const handleFetchFiles = (data) => {
+      
+      const path = data.detail.path ?? '/';
+      
+      loadFiles(path);
+    }
+
+    // Load Files when the files:fetch event is triggered.
+    window.addEventListener("files:fetch", handleFetchFiles);
+
+    loadFiles();
+
+    return () => {
+      window.removeEventListener("files:fetch", handleFetchFiles);
+    }
   }, []);
+
+  useEffect(() => {
+    // To Use the ftp details like user,host, pass we will store these data to a context
+    ftpDetailsContext.setState(prev => ({
+      ...prev,
+      host: state.ftp_host,
+      user: state.ftp_username,
+      pass: state.ftp_password,
+      currentPath: state.ftp_path,
+    }));
+  }, [state.ftp_path]);
+
+  const loadFiles = (path) => {
+
+    // Show Toaster and load the files too.
+    toast.promise(
+      fetchFileData(path ?? state.ftp_path),
+      {
+        loading: "Fetching Files",
+        success: "Files Loaded Successfully",
+        error: "Unable to Load files"
+      }
+    )
+  }
 
   const fetchFileData = async (path = "/") => {
     if (path === "") path = "/";
+
     setState(prevState => (
       {
         ...prevState,
-        is_table_hidden: true
+        is_table_hidden: true,
+        ftp_path: path
       })
     );
 
@@ -92,21 +132,12 @@ const Connect = (props) => {
           ...prevState,
           is_table_hidden: false,
           searchPath: path,
-          ftp_path: path,
           ftp_files: sorted
         })
       );
 
     } catch (error) {
-      setState(prevState => (
-        {
-          ...prevState,
-          ftp_errors: [
-            ...prevState.ftp_errors,
-            "Unable To Complete The Request"
-          ]
-        })
-      );
+      toast.error("Unable to complete the request" + error);
     }
   };
 
@@ -120,21 +151,23 @@ const Connect = (props) => {
       })
     );
 
-    fetchFileData(followingPath);
+    loadFiles(followingPath)
   };
 
   const handleSearchPath = (e) => {
+    let query = e.target.value;
+
     setState(prevState => (
       {
         ...prevState,
-        searchPath: e.target.value
+        searchPath: query
       })
     );
   };
 
   const handleSearch = () => {
     if (state.ftp_path !== state.searchPath) {
-      fetchFileData(state.searchPath);
+      loadFiles(state.searchPath);
     }
 
     setState(prevState => (
@@ -178,15 +211,9 @@ const Connect = (props) => {
       }
     ).then((rsp) => {
       if (rsp.data.success) {
-        fetchFileData(state.ftp_path);
+        loadFiles(state.ftp_path);
       }
     })
-
-    // const response = await renameFile(from, to);
-
-    // if (response.success) {
-    //   fetchFileData(state.ftp_path);
-    // }
   }
 
   const renameFile = (from, to) => new Promise(async (resolve, reject) => {
@@ -252,7 +279,7 @@ const Connect = (props) => {
               <>
                 <SearchPath currentPath={state.searchPath} handleChange={handleSearchPath} handleClick={handleSearch} />
                 <div className="flex justify-end p-4">
-                  <CreateItem />
+                  <CreateItem/>
                 </div>
                 <Card className="h-auto w-full overflow-scroll md:overflow-hidden">
                   <TableData
@@ -269,7 +296,6 @@ const Connect = (props) => {
 
       {/* Rename Confirmation Modal  */}
       <RenameConfirmation handleOnConfirm={handleOnConfirm} />
-      <ImportHotToast />
       <CreateItemDialog />
 
     </header>

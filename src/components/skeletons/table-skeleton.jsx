@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 
 export default function TableSkeleton() {
     const [isClient, setIsClient] = useState(false);
-    
+
     useEffect(() => {
         setIsClient(true);
     }, []);
@@ -30,7 +30,7 @@ export default function TableSkeleton() {
                 </thead>
                 <tbody>
                     {Array(3).fill().map((_, k) => {
-                        return <Row key={k} isClient={isClient}/>
+                        return <Row key={k} isClient={isClient} />
                     })}
                 </tbody>
             </table>
@@ -38,14 +38,16 @@ export default function TableSkeleton() {
     )
 }
 
-function Row({isClient}) {
+function Row({ isClient }) {
     return (
         <tr>
             <td className='grid md:grid-cols-[6%_auto] sm:grid-cols-1 px-3 py-1'>
-                {isClient && typeof window !== 'undefined' && window.innerWidth > 768 && (
-                    <Skeleton containerClassName='mt-2 mx-2' height={30} width={30} />
-                )}
-                <Skeleton height={42} />
+                {/* {isClient && typeof window !== 'undefined' && window.innerWidth > 768 && (
+                    <> */}
+                        <Skeleton containerClassName='mt-2 mx-2' height={30} width={30} />
+                        <Skeleton height={42} />
+                    {/* </> */}
+                {/* )} */}
             </td>
 
         </tr>
