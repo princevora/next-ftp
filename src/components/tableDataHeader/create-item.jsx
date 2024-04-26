@@ -4,7 +4,7 @@ import {
 import {
     PlusIcon,
 } from "@heroicons/react/24/outline";
-import { useCreateItemContext } from "@/context/create-item/create-item";
+import { useCreateItemContext } from "@/context/create-item";
 
 function CreateItem() {
     const context = useCreateItemContext();

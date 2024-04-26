@@ -33,7 +33,6 @@ const TableData = (props) => {
 
     const currentPath = props.currentPath;
     const parentPath = path.dirname(currentPath);
-    // console.log(parentPath.root);
 
     const handleClick = (filename, perms) => {
         setState(prevState => ({

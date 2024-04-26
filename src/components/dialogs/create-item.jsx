@@ -10,7 +10,7 @@ import {
   Input,
   Radio,
 } from "@material-tailwind/react";
-import { useCreateItemContext } from "@/context/create-item/create-item";
+import { useCreateItemContext } from "@/context/create-item";
 import { useFtpDetailsContext } from "@/context/ftp-details-context";
 import toast from "react-hot-toast";
 import path from "path";
