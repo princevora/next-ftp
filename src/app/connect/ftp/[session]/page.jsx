@@ -26,17 +26,24 @@ const Connect = ({ params }) => {
     const renameInputRef = useRef(null);
     const ftpDetailsContext = useFtpDetailsContext();
     const password = usePasswordContext();
-    const encData = CryptoJs.AES.decrypt(decodeURIComponent(params.session), password);
-    const json = JSON.parse(encData.toString(CryptoJs.enc.Utf8));
 
-    console.log(json);
+    // Get Url Query Data.
+    const encData = CryptoJs.AES.decrypt(decodeURIComponent(params.session), password);
+    let rsp;
+    try {
+        rsp = JSON.parse(encData.toString(CryptoJs.enc.Utf8));
+    } catch (error) {
+        rsp = null
+    } 
+
+    const json = rsp;
 
     const apiEndpoint = "/api/ftp";
 
     const [state, setState] = useState({
-        ftp_host: json.ftp_host,
-        ftp_username: json.ftp_username,
-        ftp_password: json.ftp_password,
+        ftp_host: json?.ftp_host,
+        ftp_username: json?.ftp_username,
+        ftp_password: json?.ftp_password,
         is_table_hidden: null,
         ftp_files: null,
         ftp_path: "/",
