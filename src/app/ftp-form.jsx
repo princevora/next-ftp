@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import FtpDataForm from '@/components/ftp-form';
-import Connect from './connect-ftp';
+import Connect from '../../backup/connect-ftp';
 import {
     Typography
 } from "@material-tailwind/react";
@@ -9,6 +9,7 @@ import FormSkeleton from "@/components/skeletons/form-skeleton";
 import ImportHotToast from '@/components/import-toaster';
 import CryptoJs from "crypto-js";
 import { usePasswordContext } from '@/context/encrypt-password';
+import { useRouter } from 'next/navigation';
 
 const FtpForm = () => {
     const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ const FtpForm = () => {
     });
 
     const password = usePasswordContext();
+    const router = useRouter();
 
     useEffect(() => {
         const timeoutId =  setTimeout(() => {
@@ -39,23 +41,24 @@ const FtpForm = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // const {ftp_host, ftp_username, ftp_password} = formData;
-        // const data = {ftp_host, ftp_username, ftp_password};
-        // let eData = CryptoJs.AES.encrypt(JSON.stringify(data), password).toString(); //Encrypted Form Of Data
+        const {ftp_host, ftp_username, ftp_password} = formData;
+        const data = {ftp_host, ftp_username, ftp_password};
+        let eData = CryptoJs.AES.encrypt(JSON.stringify(data), password).toString(); //Encrypted Form Of Data
 
-        // setFormData(prevState => ({ ...prevState, isSubmitted: true, encryptedData: eData }));
-        setFormData(prevState => ({ ...prevState, isSubmitted: true}));
+        setFormData(prevState => ({ ...prevState, isSubmitted: true, encryptedData: eData }));
+        router.push(`connect/ftp/${encodeURIComponent(eData)}`);
+        // setFormData(prevState => ({ ...prevState, isSubmitted: true}));
     }
 
     return (
         <>
             <ImportHotToast />
-          
+{/*           
             {formData.isSubmitted? (
                 <Connect
                     {...formData}
                 />
-            ) : (
+            ) : ( */}
                 <header className="mt-5 bg-white p-8">
                     <div className="w-w-full container mx-auto pt-12 pb-24 text-center">
                         <Typography
@@ -76,7 +79,7 @@ const FtpForm = () => {
                         </div>
                     </div>
                 </header>
-            )}
+            {/* )} */}
         </>
     );
 }

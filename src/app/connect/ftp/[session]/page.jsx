@@ -11,14 +11,16 @@ import TableSkeleton from "@/components/skeletons/table-skeleton";
 import SearchPath from "@/components/tableDataHeader/search-path";
 import CreateItem from "@/components/tableDataHeader/create-item";
 import CreateItemDialog from "@/components/dialogs/create-item";
+import FtpErrors from "@/components/errors/errors";
+import Action from "@/components/errors/errors-speed-dial"
 import TableData from "@/components/table-data";
 import toast from 'react-hot-toast';
 import path, { resolve } from 'path';
 import { usePasswordContext } from '@/context/encrypt-password';
 import CryptoJs from "crypto-js";
-import ImportHotToast from "@/components/import-toaster";
+import ImportHotToast from '@/components/import-toaster';
 
-function Connect({ params }) {
+const Connect = ({ params }) => {
 
     const context = useContext(RenameItemContext);
     const errorContext = useContext(ErrorContext);
@@ -26,63 +28,44 @@ function Connect({ params }) {
     const renameInputRef = useRef(null);
     const ftpDetailsContext = useFtpDetailsContext();
     const password = usePasswordContext();
-    const ftpSession = decodeURIComponent(params.session);
+    const encData = CryptoJs.AES.decrypt(decodeURIComponent(params.session), password);
+    const json = JSON.parse(encData.toString(CryptoJs.enc.Utf8));
+
+    console.log(json);
+
     const apiEndpoint = "/api/ftp";
 
     const [state, setState] = useState({
-        ftp_host: "",
-        ftp_username: "",
-        ftp_password: "",
+        ftp_host: json.ftp_host,
+        ftp_username: json.ftp_username,
+        ftp_password: json.ftp_password,
         is_table_hidden: null,
         ftp_files: null,
         ftp_path: "/",
         searchPath: "/",
     });
 
-    // Set the FtpParams That will be used in Https Requests.
-    let ftpParams;
-
-    const setData = (data) => new Promise(resolve => {
-
-        setState(data, () => {
-            console.log(state);
-        });
-
-        // if(setState(data)){
-        //     resolve(state);
-        // }
-    })
+    // Set the FtpParams That will be used in Https Requests  
+    let ftpParams = {
+        host: state.ftp_host,
+        user: state.ftp_username,
+        pass: state.ftp_password,
+        action: "fetch", //Default to fetch action
+    };;
 
     useEffect(() => {
 
-        async function fetchAndCall() {
-            // Get password And data from context and props and decrypt it.
-            const data = CryptoJs.AES.decrypt(ftpSession, password);
-
-            // Get utf8 string and parse the json recived.
-            const json = JSON.parse(data.toString(CryptoJs.enc.Utf8));
-            const { ftp_username, ftp_host, ftp_password } = json;
-
-            await setData({
-                ...state,
-                ftp_host,
-                ftp_username,
-                ftp_password
-            }).then((data) => {
-                console.log(data);
-            });
-        }
-
-        fetchAndCall()
-
         const handleFetchFiles = (data) => {
-            const path = data.detail?.path ??'/';
+
+            const path = data.detail.path ?? '/';
 
             loadFiles(path);
         }
 
         // Load Files when the files:fetch event is triggered.
         window.addEventListener("files:fetch", handleFetchFiles);
+
+        loadFiles();
 
         return () => {
             window.removeEventListener("files:fetch", handleFetchFiles);

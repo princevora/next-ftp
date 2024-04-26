@@ -15,7 +15,6 @@ import TableData from "@/components/table-data";
 import toast from 'react-hot-toast';
 import path, { resolve } from 'path';
 import { usePasswordContext } from '@/context/encrypt-password';
-import CryptoJs from "crypto-js";
 
 const Connect = (props) => {
 
