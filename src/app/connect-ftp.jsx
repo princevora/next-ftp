@@ -25,39 +25,28 @@ const Connect = (props) => {
   const renameInputRef = useRef(null);
   const ftpDetailsContext = useFtpDetailsContext();
   const password = usePasswordContext();
-  
+
   const apiEndpoint = "/api/ftp";
 
   const [state, setState] = useState({
-    ftp_host: "",
-    ftp_username: "",
-    ftp_password: "",
+    ftp_host: props.ftp_host,
+    ftp_username: props.ftp_username,
+    ftp_password: props.ftp_password,
     is_table_hidden: null,
     ftp_files: null,
     ftp_path: "/",
     searchPath: "/",
   });
 
-  let ftpParams;
+  // Set the FtpParams That will be used in Https Requests  
+  let ftpParams = {
+    host: state.ftp_host,
+    user: state.ftp_username,
+    pass: state.ftp_password,
+    action: "fetch", //Default to fetch action
+  };;
 
   useEffect(() => {
-    // Get password And data from context and props and decrypt it.
-    const data = CryptoJs.AES.decrypt(props.data, password);
-
-    // Get utf8 string and parse the json recived.
-    const json = JSON.parse(data.toString(CryptoJs.enc.Utf8));
-    const {ftp_host, ftp_username, ftp_password} = json;
-    
-    // Set the data
-    setState({...state, ftp_host, ftp_username, ftp_password,});
-
-    // Set the FtpParams That will be used in Https Requests.
-    ftpParams = {
-      host: state.ftp_host,
-      user: state.ftp_username,
-      pass: state.ftp_password,
-      action: "fetch", //Default to fetch action
-    };
 
     const handleFetchFiles = (data) => {
 
@@ -114,7 +103,7 @@ const Connect = (props) => {
 
   }
 
-  const fetchFileData = (path = "/") => new Promise(async  (resolve, reject) => {
+  const fetchFileData = (path = "/") => new Promise(async (resolve, reject) => {
 
     if (path === "") path = "/";
 
