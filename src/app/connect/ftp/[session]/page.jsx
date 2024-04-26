@@ -11,8 +11,6 @@ import TableSkeleton from "@/components/skeletons/table-skeleton";
 import SearchPath from "@/components/tableDataHeader/search-path";
 import CreateItem from "@/components/tableDataHeader/create-item";
 import CreateItemDialog from "@/components/dialogs/create-item";
-import FtpErrors from "@/components/errors/errors";
-import Action from "@/components/errors/errors-speed-dial"
 import TableData from "@/components/table-data";
 import toast from 'react-hot-toast';
 import path, { resolve } from 'path';
@@ -298,7 +296,11 @@ const Connect = ({ params }) => {
 
             {/* Rename Confirmation Modal  */}
             <RenameConfirmation handleOnConfirm={handleOnConfirm} />
+
+            {/* Create item dialog */}
             <CreateItemDialog />
+
+            {/* Import hot toast */}
             <ImportHotToast />
 
         </header>
