@@ -1,7 +1,11 @@
+import { useSearchPathContext } from "@/context/search-path";
+
 const { ArrowUturnLeftIcon } = require("@heroicons/react/20/solid");
 const { Typography, Tooltip } = require("@material-tailwind/react");
 
 function PreviousPath({ previousPath }) {
+
+    const searchContext = useSearchPathContext();
 
     const handleClick = () => {
         const event = new CustomEvent("files:fetch", {
@@ -9,6 +13,10 @@ function PreviousPath({ previousPath }) {
                 path: previousPath
             }
         });
+        
+        // Update the Context
+        searchContext.setState(previousPath);
+
         window.dispatchEvent(event);
     }
 

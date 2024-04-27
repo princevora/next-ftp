@@ -18,8 +18,6 @@ export default function CheckConnection() {
         }
     }, []);
 
-    console.log(isOnline);
-
     return (
         !isOnline && (
             <div className="fixed bottom-0 left-0 w-full bg-red-500 text-white py-2 px-4 flex items-center justify-center animate-fade-up">

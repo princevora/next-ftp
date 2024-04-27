@@ -33,6 +33,8 @@ function Connect({ params }) {
     // Get Url Query Data.
     const encData = CryptoJs.AES.decrypt(decodeURIComponent(params.session), password);
     let rsp;
+    
+    // Prevent Errors.
     try {
         rsp = JSON.parse(encData.toString(CryptoJs.enc.Utf8));
     } catch (error) {
@@ -64,9 +66,7 @@ function Connect({ params }) {
     useEffect(() => {
 
         const handleFetchFiles = (data) => {
-
             const path = data.detail.path ?? '/';
-
             loadFiles(path);
         }
 
@@ -87,7 +87,6 @@ function Connect({ params }) {
             host: state.ftp_host,
             user: state.ftp_username,
             pass: state.ftp_password,
-            currentPath: state.ftp_path,
         }));
     }, [state.ftp_path]);
 
@@ -160,6 +159,7 @@ function Connect({ params }) {
 
     const handePath = (folderPath) => {
         let followingPath = path.join(state.ftp_path, folderPath);
+        searchContext.setState(followingPath);
 
         setState(prevState => (
             {
@@ -278,7 +278,7 @@ function Connect({ params }) {
                     <Card className='mx-auto shadow-xl'>
                         {!state.is_table_hidden && state.ftp_files ? (
                             <>
-                                <SearchPath currentPath={state.searchPath} handleClick={handleSearch} />
+                                <SearchPath handleClick={handleSearch} />
                                 <div className="flex justify-end p-4">
                                     <CreateItem />
                                 </div>

@@ -3,19 +3,21 @@ import { useContext } from 'react';
 import { RenameItemContext } from "../context/renameItem/RenameItemContext";
 import ItemIcon from "./item-icons";
 import path from "path";
+import { useSearchPathContext } from "@/context/search-path";
 
 const TableNameItem = (props) => {
     const context = useContext(RenameItemContext);
-    const toPath = context.to;
+    const searchContext = useSearchPathContext(); //will be used to get the current path. 
+    const currentPath = path.dirname(searchContext.state);
 
     const handleChange = (e) => {
 
-        const fromPath = path.join(props.currentPath, props.fileInfo.name);
+        const fromPath = path.join(currentPath, props.fileInfo.name);
         const inputValue = e.target.value;
         let toPath = "";
 
         if(inputValue !== ""){
-            toPath  = path.join(props.currentPath, e.target.value);
+            toPath  = path.join(currentPath, e.target.value);
         }
         
         context.setItemName(fromPath, toPath);

@@ -12,10 +12,13 @@ import RenameItem from "./table-action-components/rename-item";
 import { RenameItemContext } from '../context/renameItem/RenameItemContext';
 import PreviousPath from "./table-action-components/previous-path";
 import path from 'path';
+import { useSearchPathContext } from '@/context/search-path';
 
 const TableData = (props) => {
 
     const context = useContext(RenameItemContext);
+    const searchContext = useSearchPathContext();
+    const currentPath = props.currentPath;
     const TABLE_HEADS = ["Filename", "Permissions", "Size", "Last Modified", "Actions"];
 
     const [state, setState] = useState({
@@ -31,8 +34,7 @@ const TableData = (props) => {
         }
     });
 
-    const currentPath = props.currentPath;
-    const parentPath = path.dirname(currentPath);
+    const parentPath = path.dirname(searchContext.state);
 
     const handleClick = (filename, perms) => {
         setState(prevState => ({
@@ -110,7 +112,6 @@ const TableData = (props) => {
 
     const tableNameItemProps = {
         renameInputRef: props.renameInputRef,
-        currentPath: props.currentPath,
         currentState: state.renaming,
         handleChangePath: props.handleChangePath,
         handleSubmitRename: props.handleSubmitRename
@@ -141,7 +142,6 @@ const TableData = (props) => {
                     {
                         currentPath !== "." && currentPath !== "/" && 
 
-                        // previousPath={}
                         <PreviousPath previousPath={parentPath}/>
                     }
                     {props.data.map((file) => (
