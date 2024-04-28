@@ -4,14 +4,14 @@ import { RenameItemContext } from "../context/renameItem/RenameItemContext";
 import ItemIcon from "./item-icons";
 import path from "path";
 import { useSearchPathContext } from "@/context/search-path";
+import { useFtpDetailsContext } from "@/context/ftp-details-context";
 
 const TableNameItem = (props) => {
     const context = useContext(RenameItemContext);
-    const searchContext = useSearchPathContext(); //will be used to get the current path. 
-    const currentPath = path.dirname(searchContext.state);
+    const searchContext = useFtpDetailsContext(); //will be used to get the current path. 
+    const currentPath = searchContext.state.currentPath;
 
     const handleChange = (e) => {
-
         const fromPath = path.join(currentPath, props.fileInfo.name);
         const inputValue = e.target.value;
         let toPath = "";
@@ -19,7 +19,7 @@ const TableNameItem = (props) => {
         if(inputValue !== ""){
             toPath  = path.join(currentPath, e.target.value);
         }
-        
+
         context.setItemName(fromPath, toPath);
     };
 

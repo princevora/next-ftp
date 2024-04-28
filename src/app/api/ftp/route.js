@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { connectLogin, fetchFiles, ftpDestroy, setFtpConfig, createItem, renameFile, sendObjRes } from './api';
-import { renameSchema, fetchSchema, createSchema } from "./requet-schema";
+import { connectLogin, fetchFiles, ftpDestroy, setFtpConfig, createItem, renameFile, sendObjRes, deleteFile } from './api';
+import { renameSchema, fetchSchema, createSchema, deleteSchema } from "./requet-schema";
 
 const VALID_ACTIONS = {
     "fetch": {
@@ -11,7 +11,10 @@ const VALID_ACTIONS = {
         schema: renameSchema,
         func: renameFile
     },
-    "delete": "deleteFiles",
+    "delete": {
+        schema: deleteSchema,
+        func: deleteFile
+    },
     "create": {
         schema: createSchema,
         func: createItem

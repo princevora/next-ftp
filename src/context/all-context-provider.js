@@ -2,7 +2,7 @@
 
 import ErrorContextProvider from "./ftperrors-collapse/errors-collapse-context";
 import RenameItemContextProvider from "./renameItem/RenameItemContext";
-import RenameConfirmationContextProvider from "./renameItem/RenameConfirmation";
+import RenameConfirmationContextProvider from "./renameItem/confirmation";
 import CreateItemContextProvider from "./create-item";
 import FtpDetailsContextProvider from "./ftp-details-context";
 import PasswordContextProvider from "./encrypt-password";

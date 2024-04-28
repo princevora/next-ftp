@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import FtpDataForm from '@/components/ftp-form';
-import Connect from '../../backup/connect-ftp';
 import {
     Typography
 } from "@material-tailwind/react";

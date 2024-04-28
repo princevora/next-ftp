@@ -16,6 +16,12 @@ export const renameSchema = z.object({
     to: z.string({required_error: createSen("to")})
 })
 
+export const deleteSchema = z.object({
+    ...mainParmas,
+    type: z.number(),
+    from: z.string(),
+})
+
 export const fetchSchema = z.object({
     ...mainParmas,
     path: z.string().optional(),

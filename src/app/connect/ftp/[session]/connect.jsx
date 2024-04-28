@@ -1,11 +1,11 @@
 "use client";
 
-import { RenameConfirmationContext } from '@/context/renameItem/RenameConfirmation';
+import { useConfirmationContext } from '@/context/renameItem/confirmation';
 import { ErrorContext } from '@/context/ftperrors-collapse/errors-collapse-context';
 import { RenameItemContext } from "@/context/renameItem/RenameItemContext";
 import { Card, Collapse, Tooltip, IconButton } from '@material-tailwind/react';
 import { useFtpDetailsContext } from '@/context/ftp-details-context';
-import RenameConfirmation from "@/components/dialogs/rename-confirmation";
+import Confirmation from "@/components/dialogs/confirmation";
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import TableSkeleton from "@/components/skeletons/table-skeleton";
 import SearchPath from "@/components/tableDataHeader/search-path";
@@ -24,7 +24,7 @@ function Connect({ params }) {
 
     const context = useContext(RenameItemContext);
     const errorContext = useContext(ErrorContext);
-    const rContext = useContext(RenameConfirmationContext); //Rename confirmation context
+    const rContext = useConfirmationContext() //Rename confirmation context
     const renameInputRef = useRef(null);
     const ftpDetailsContext = useFtpDetailsContext();
     const password = usePasswordContext();
@@ -87,7 +87,9 @@ function Connect({ params }) {
             host: state.ftp_host,
             user: state.ftp_username,
             pass: state.ftp_password,
+            currentPath: state.ftp_path
         }));
+
     }, [state.ftp_path]);
 
     const loadFiles = async (path) => {
@@ -174,6 +176,10 @@ function Connect({ params }) {
     const handleSearch = () => {
         const query = searchContext.state;
 
+        if(query == ""){
+            return toast.error("The search path cannot be empty");
+        }
+
         if (state.ftp_path !== query) { //Prevent refresh of files if the query is similar to ftp path.
             loadFiles(query);
         }
@@ -189,44 +195,21 @@ function Connect({ params }) {
     const handleSubmitRename = async (e) => {
         e.preventDefault();
 
-        rContext.setVisible(true);
-        return;
-    }
-
-    const handleOnConfirm = async () => {
-        const { from, to } = context;
-        let inputField;
-
-        const fromBaseName = path.basename(from);
-        const domain = to.split(".").pop();
-        const lDomain = domain.toLowerCase();
-        const normalizedtoBaseName = to.replace(domain, lDomain); //This lines will change the UpperCase Domain names to lowercase.
-        const toBaseName = path.basename(normalizedtoBaseName);
-
-        if (toBaseName === "") {
-            return toast.error("The File Name Must not be empty");
+        const toBaseName = path.basename(context.to);
+        if(toBaseName == ""){
+            return toast.error("The file name must not be empty");
         }
-
-        inputField = renameInputRef.current.querySelector("input")
-        inputField.disabled = true;
-
-        toast.promise(
-            renameFile(from, normalizedtoBaseName),
-            {
-                loading: `Renaming file: ${fromBaseName}`,
-                success: `Successfully Renamed the File to: ${toBaseName}`,
-                error: "Unable to rename the file, please try again later"
-            }
-        ).then((rsp) => {
-            if (rsp.data.success) {
-                loadFiles(state.ftp_path);
-            }
-        })
+        else{
+            rContext.setState(prev => ({
+                ...prev,
+                modalTitle: "Rename Confirmation",
+                modalDesc: `Are you Sure? you are renaming a file: ${toBaseName}. please confirm your Action`,
+                isVisible: true
+            }));
+        }
     }
-
+    
     const renameFile = (from, to) => new Promise(async (resolve, reject) => {
-
-
         const toDomain = to.split(".").pop();
 
         const paramData = { ...ftpParams };
@@ -262,6 +245,39 @@ function Connect({ params }) {
         }
     })
 
+    // renameConfirmation Handler
+    const handleOnConfirm = async () => {
+        const { from, to } = context;
+        let inputField;
+
+        const fromBaseName = path.basename(from);
+        const domain = to.split(".").pop();
+        const lDomain = domain.toLowerCase();
+        const normalizedtoBaseName = to.replace(domain, lDomain); //This lines will change the UpperCase Domain names to lowercase.
+        const toBaseName = path.basename(normalizedtoBaseName);
+
+        if (toBaseName === "") {
+            return toast.error("The File Name Must not be empty");
+        }
+
+        inputField = renameInputRef.current.querySelector("input")
+        inputField.disabled = true;
+
+        toast.promise(
+            renameFile(from, normalizedtoBaseName),
+            {
+                loading: `Renaming file: ${fromBaseName}`,
+                success: `Successfully Renamed the File to: ${toBaseName}`,
+                error: "Unable to rename the file, please try again later"
+            }
+        ).then((rsp) => {
+            if (rsp.data.success) {
+                loadFiles(state.ftp_path);
+            }
+        });
+    }
+
+
 
     const tableDataProps = {
         renameInputRef,
@@ -296,7 +312,7 @@ function Connect({ params }) {
             </div>
 
             {/* Rename Confirmation Modal  */}
-            <RenameConfirmation handleOnConfirm={handleOnConfirm} />
+            <Confirmation handleOnConfirm={handleOnConfirm} />
 
             {/* Create item dialog */}
             <CreateItemDialog />

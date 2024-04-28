@@ -100,16 +100,16 @@ export default function CreateItemDialog() {
           success: (rsp) => rsp.message,
           error: (err) => err.message
         },
-      )
+      ).then(() => {
+        // Emit an event to load files.
+        const event = new CustomEvent("files:fetch", {
+          detail: {
+            path: currentPath ?? "/"
+          }
+        })
 
-      // Emit an event to load files.
-      const event = new CustomEvent("files:fetch", {
-        detail: {
-          path: currentPath ?? "/"
-        }
-      })
-
-      window.dispatchEvent(event);
+        window.dispatchEvent(event);
+      });
 
     } catch (error) {
     } finally {

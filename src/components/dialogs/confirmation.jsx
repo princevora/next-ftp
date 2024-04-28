@@ -1,4 +1,4 @@
-import { RenameConfirmationContext } from "../../context/renameItem/RenameConfirmation";
+import { useConfirmationContext } from "../../context/renameItem/confirmation";
 import { RenameItemContext } from "../../context/renameItem/RenameItemContext";
 import React, { useContext, useRef } from "react";
 import {
@@ -10,20 +10,26 @@ import {
 } from "@material-tailwind/react";
 import path from "path";
 
-export default function RenameConfirmation({ handleOnConfirm }) {
+export default function Confirmation({ handleOnConfirm }) {
 
-    const context = useContext(RenameConfirmationContext);
-    const open = context.isVisible;
+    const context = useConfirmationContext();
+    const open = context.state.isVisible;
     const dialogElem = useRef(null);
     const rContext = useContext(RenameItemContext);
 
     const handleOpen = () => {
-        context.setVisible(!open);
+        context.setState(prev => ({
+            ...prev,
+            isVisible: !open
+        }))
     };
 
     const handleConfirm = (value) => {
-        context.setConfirm(value);
-        
+        context.setState(prev => ({
+            ...prev,
+            isVisible: value
+        }))
+
         if(value){
             return handleOnConfirm();
         }
@@ -33,9 +39,9 @@ export default function RenameConfirmation({ handleOnConfirm }) {
 
     return (
         <Dialog open={open} handler={handleOpen}>
-            <DialogHeader>Are you Sure?, You want to rename: {rContext.from ? path.basename(rContext.from) : "Unknown"} File</DialogHeader>
+            <DialogHeader>{context.state.modalTitle}</DialogHeader>
             <DialogBody>
-                You are renaming an existing file. Please confirm Your Action.
+                {context.state.modalDesc}
             </DialogBody>
             <DialogFooter>
                 <Button

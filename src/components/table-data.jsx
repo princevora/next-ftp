@@ -11,6 +11,7 @@ import TableNameItem from "@/components/table-name-item";
 import RenameItem from "./table-action-components/rename-item";
 import { RenameItemContext } from '../context/renameItem/RenameItemContext';
 import PreviousPath from "./table-action-components/previous-path";
+import DeleteItem from "./table-action-components/delete-item";
 import path from 'path';
 import { useSearchPathContext } from '@/context/search-path';
 
@@ -47,17 +48,45 @@ const TableData = (props) => {
 
     const handleSelectAll = () => {
         const rows = document.getElementsByClassName("selectFile");
+        
+        let i;
+        
+        for (i = 0; i < rows.length; i++) {
+            rows[i].checked = !state.isAllSelected;
+        }
+
         setState(prevState => ({
             ...prevState,
             isAllSelected: !prevState.isAllSelected
         }));
+    };
 
+    const handleChangeSelect = (e) => {
+        const rows = document.getElementsByClassName("selectFile");
         let i;
 
-        for (i = 0; i < rows.length; i++) {
-            rows[i].checked = !state.isAllSelected;
+        if(state.isAllSelected && !e.target.checked){
+            setState(({
+                ...state,
+                isAllSelected: false
+            }))
+        } else if(!state.isAllSelected){ //Basic logic to cheeck wether the all checkboxes are checked.
+
+            let selectedRows = 0;
+            for (i = 0; i < rows.length; i++) {
+                if(rows[i].checked){
+                    selectedRows++;
+                }
+            }
+
+            if(selectedRows === rows.length){
+                setState(prev => ({
+                    ...prev,
+                    isAllSelected: true
+                }))
+            }
         }
-    };
+    }
 
     const setRenameElement = (fileName, e) => {
         e.preventDefault();
@@ -69,7 +98,7 @@ const TableData = (props) => {
         }
 
         // context may occur bugs so this is required to prevent these kind of bugs
-        context.setItemName("",""); 
+        context.setItemName("", "");
 
         setState(prevState => ({
             ...prevState,
@@ -123,7 +152,7 @@ const TableData = (props) => {
                 <thead>
                     <tr>
                         <th className='border-b border-blue-gray-100 bg-blue-gray-50'>
-                            <Checkbox onChange={handleSelectAll} value={state.isAllSelected} />
+                            <Checkbox onChange={handleSelectAll} checked={state.isAllSelected} />
                         </th>
                         {TABLE_HEADS.map((head) => (
                             <th key={head} className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
@@ -140,14 +169,14 @@ const TableData = (props) => {
                 </thead>
                 <tbody className='max-w-full'>
                     {
-                        currentPath !== "." && currentPath !== "/" && 
+                        currentPath !== "." && currentPath !== "/" &&
 
-                        <PreviousPath previousPath={parentPath}/>
+                        <PreviousPath previousPath={parentPath} />
                     }
                     {props.data.map((file) => (
                         <tr key={file.name} className="even:bg-blue-gray-50/50 hover:bg-blue-gray-50 duration-[1.1s]">
                             <td>
-                                <Checkbox className='selectFile' />
+                                <Checkbox className='selectFile' onChange={handleChangeSelect}/>
                             </td>
                             <td className='flex py-4'>
                                 <TableNameItem
@@ -171,7 +200,9 @@ const TableData = (props) => {
                             </td>
                             <td>
                                 <Typography variant="small" color="blue-gray" className="font-normal">
-                                    <GetSize intSize={file.size} />
+                                    {
+                                        file.type === 1 ? "Folder" : <GetSize intSize={file.size} />
+                                    }
                                 </Typography>
                             </td>
                             <td>
@@ -182,17 +213,7 @@ const TableData = (props) => {
                             <td>
                                 <div className="flex gap-3 ">
                                     <RenameItem fileName={file.name} setRenameElement={setRenameElement} />
-                                    <Typography as="a" href="#" variant="small" color="current" className="font-medium">
-                                        <Tooltip content={`Delete: ${file.name}`}>
-                                            <TrashIcon
-                                                onClick={
-                                                    (e) => setRenameElement(file.name, e)
-                                                }
-                                                height={15}
-                                                width={15}
-                                            />
-                                        </Tooltip>
-                                    </Typography>
+                                    <DeleteItem fileName={file.name} type={file.type}/>
                                 </div>
                             </td>
                         </tr>

@@ -40,15 +40,10 @@ export const getFtpFIles = () => new Promise((resolve, reject) => {
 })
 
 export const fetchFiles = async () => {
-    // Declare A ftp files variable
-
     try {
 
         // Fetch files if login gets success.
         const ftp_files = await getFtpFIles();
-
-        // Destroy connection
-        await ftpDestroy(); //Destroy Ftp connection
 
         // Send files
         return sendObjRes({ ftp_files }, 200, false)
@@ -89,6 +84,78 @@ const checkExists = (filePath) => new Promise((resolve, reject) => {
         }
     })
 })
+
+export const deleteFile = ({ from, type }) => new Promise(async (resolve, reject) => {
+    if (type === 0) {
+        ftp.raw("DELE", from, (err, data) => {
+            if (err) {
+                reject(sendObjRes(err.message, err.code, true));
+            }
+            else {
+                resolve(sendObjRes("File has been successfully Deleted", 200));
+            }
+        })
+    }
+    else {
+        const deleteDir = (filePath) => new Promise((resolve, reject) => {
+            ftp.raw("RMD", from, (err, data) => {
+                if (err) {
+                    reject({
+                        success: false,
+                        message: err.message,
+                        code: err.code
+                    })
+                }
+                else {
+                    resolve({
+                        success: true,
+                        message: "Directory Has been successfully deleted."
+                    })
+                }
+            })
+        })
+
+        try {
+            path = from;
+
+            // Get the child folders and files.
+            await fetchFiles()
+                .then(async (rsp) => {
+                    let promises = [];
+                    let mainParent;
+                     
+                    const files = rsp.data.ftp_files;
+
+                    if(files.length !== 0){
+                        for(const file of files){
+                            const { name, type } = file;
+                            if (file.type === 1) { //For the child folders
+                                promises.push(deleteFile({from: `${from}/${name}`, type}));
+                            }
+                            else { //for the child files
+                                promises.push(deleteFile({from: `${from}/${name}`, type}));
+                            }
+                        }
+                       
+                        mainParent = pathModule.dirname(path);
+                    }
+                    else{
+                        promises.push([]);
+                    }
+
+                    await Promise.all(promises)
+                        .then(() => {
+                            deleteDir()
+                            .then((rsp) => resolve(sendObjRes("The Directory(ies) Has been Deleted Successfully.", 200)))
+                            .catch((error) => reject(sendObjRes(error.message, error.code, true)));
+                        })
+                        .catch((error) => reject(sendObjRes("Unable to delete file", error.code || 500, true)));
+                });
+        } catch (error) {
+            reject(sendObjRes("Unable to delete file", error.code || 500, true));
+        }
+    }
+});
 
 export const createItem = ({ type, name }) => new Promise(async (resolve, reject) => {
 
