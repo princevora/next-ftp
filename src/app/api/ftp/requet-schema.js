@@ -1,19 +1,19 @@
-import { z } from 'zod';
+import { ZodString, string, z } from 'zod';
 
 const createSen = (fieldName) => {
     return `The ${fieldName} Perameter is reqired`;
 }
 
 const mainParmas = {
-    host: z.string({required_error: createSen("host")}).nonempty(),
-    user: z.string({required_error: createSen("user")}).nonempty(),
-    pass: z.string({required_error: createSen("pass")}).nonempty(),
+    host: z.string({ required_error: createSen("host") }).nonempty(),
+    user: z.string({ required_error: createSen("user") }).nonempty(),
+    pass: z.string({ required_error: createSen("pass") }).nonempty(),
 }
 
 export const renameSchema = z.object({
     ...mainParmas,
-    from: z.string({required_error: createSen("from")}),
-    to: z.string({required_error: createSen("to")})
+    from: z.string({ required_error: createSen("from") }),
+    to: z.string({ required_error: createSen("to") })
 })
 
 export const deleteSchema = z.object({
@@ -27,8 +27,13 @@ export const fetchSchema = z.object({
     path: z.string().optional(),
 })
 
+export const bulkDeleteSchema = z.object({
+    ...mainParmas,
+    paths: z.record(z.number())
+});
+
 export const createSchema = z.object({
     ...mainParmas,
-    type: z.number({required_error: createSen("type")}),
-    name: z.string({required_error: createSen("name")}),
+    type: z.number({ required_error: createSen("type") }),
+    name: z.string({ required_error: createSen("name") }),
 })

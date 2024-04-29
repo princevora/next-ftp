@@ -1,6 +1,6 @@
 import { Typography, Input, input } from "@material-tailwind/react";
 import { useContext } from 'react';
-import { RenameItemContext } from "../context/renameItem/RenameItemContext";
+import { RenameItemContext } from "../context/RenameItemContext";
 import ItemIcon from "./item-icons";
 import path from "path";
 import { useSearchPathContext } from "@/context/search-path";

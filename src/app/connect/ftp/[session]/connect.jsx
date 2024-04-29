@@ -1,15 +1,16 @@
 "use client";
 
-import { useConfirmationContext } from '@/context/renameItem/confirmation';
+import { useConfirmationContext } from '@/context/confirmation';
 import { ErrorContext } from '@/context/ftperrors-collapse/errors-collapse-context';
-import { RenameItemContext } from "@/context/renameItem/RenameItemContext";
-import { Card, Collapse, Tooltip, IconButton } from '@material-tailwind/react';
+import { RenameItemContext } from "@/context/RenameItemContext";
+import { Card } from '@material-tailwind/react';
 import { useFtpDetailsContext } from '@/context/ftp-details-context';
 import Confirmation from "@/components/dialogs/confirmation";
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import TableSkeleton from "@/components/skeletons/table-skeleton";
 import SearchPath from "@/components/tableDataHeader/search-path";
 import CreateItem from "@/components/tableDataHeader/create-item";
+import DeleteSelected from "@/components/tableDataHeader/delete-selected";
 import CreateItemDialog from "@/components/dialogs/create-item";
 import TableData from "@/components/table-data";
 import toast from 'react-hot-toast';
@@ -19,6 +20,7 @@ import CryptoJs from "crypto-js";
 import ImportHotToast from '@/components/import-toaster';
 import CheckConnection from '@/components/check-connection';
 import { useSearchPathContext } from '@/context/search-path';
+import { useBulkDeleteContext } from '@/context/bulk-delete';
 
 function Connect({ params }) {
 
@@ -29,11 +31,13 @@ function Connect({ params }) {
     const ftpDetailsContext = useFtpDetailsContext();
     const password = usePasswordContext();
     const searchContext = useSearchPathContext();
+    const deleteContext = useBulkDeleteContext();
+    const confirmation = useConfirmationContext();
 
     // Get Url Query Data.
     const encData = CryptoJs.AES.decrypt(decodeURIComponent(params.session), password);
     let rsp;
-    
+
     // Prevent Errors.
     try {
         rsp = JSON.parse(encData.toString(CryptoJs.enc.Utf8));
@@ -64,7 +68,6 @@ function Connect({ params }) {
     };;
 
     useEffect(() => {
-
         const handleFetchFiles = (data) => {
             const path = data.detail.path ?? '/';
             loadFiles(path);
@@ -123,6 +126,9 @@ function Connect({ params }) {
 
         if (path === "") path = "/";
 
+        // empty the selected items for for delete items component
+        deleteContext.setItems([]);
+
         setState(prevState => (
             {
                 ...prevState,
@@ -176,7 +182,7 @@ function Connect({ params }) {
     const handleSearch = () => {
         const query = searchContext.state;
 
-        if(query == ""){
+        if (query == "") {
             return toast.error("The search path cannot be empty");
         }
 
@@ -192,23 +198,6 @@ function Connect({ params }) {
         );
     };
 
-    const handleSubmitRename = async (e) => {
-        e.preventDefault();
-
-        const toBaseName = path.basename(context.to);
-        if(toBaseName == ""){
-            return toast.error("The file name must not be empty");
-        }
-        else{
-            rContext.setState(prev => ({
-                ...prev,
-                modalTitle: "Rename Confirmation",
-                modalDesc: `Are you Sure? you are renaming a file: ${toBaseName}. please confirm your Action`,
-                isVisible: true
-            }));
-        }
-    }
-    
     const renameFile = (from, to) => new Promise(async (resolve, reject) => {
         const toDomain = to.split(".").pop();
 
@@ -247,6 +236,12 @@ function Connect({ params }) {
 
     // renameConfirmation Handler
     const handleOnConfirm = async () => {
+        // Due to we are using context callbacks so we will hide the modal. to show the promise toast as below
+        confirmation.setState(prev => ({
+            ...prev,
+            isVisible: false
+        }));
+
         const { from, to } = context;
         let inputField;
 
@@ -277,7 +272,26 @@ function Connect({ params }) {
         });
     }
 
+    const handleSubmitRename = async (e) => {
+        e.preventDefault();
+        confirmation.setState(prev => ({
+            ...prev,
+            callback: handleOnConfirm
+        }))
 
+        const toBaseName = path.basename(context.to);
+        if (toBaseName == "") {
+            return toast.error("The file name must not be empty");
+        }
+        else {
+            rContext.setState(prev => ({
+                ...prev,
+                modalTitle: "Rename Confirmation",
+                modalDesc: `Are you Sure? you are renaming a file: ${toBaseName}. please confirm your Action`,
+                isVisible: true
+            }));
+        }
+    }
 
     const tableDataProps = {
         renameInputRef,
@@ -295,7 +309,8 @@ function Connect({ params }) {
                         {!state.is_table_hidden && state.ftp_files ? (
                             <>
                                 <SearchPath handleClick={handleSearch} />
-                                <div className="flex justify-end p-4">
+                                <div className="flex justify-end gap-2 p-4">
+                                    <DeleteSelected />
                                     <CreateItem />
                                 </div>
                                 <Card className="h-auto w-full overflow-scroll md:overflow-hidden">
@@ -312,7 +327,11 @@ function Connect({ params }) {
             </div>
 
             {/* Rename Confirmation Modal  */}
-            <Confirmation handleOnConfirm={handleOnConfirm} />
+            {
+                confirmation.state.callback && (
+                    <Confirmation />
+                )
+            }
 
             {/* Create item dialog */}
             <CreateItemDialog />

@@ -1,6 +1,25 @@
 import { z } from "zod";
-import { connectLogin, fetchFiles, ftpDestroy, setFtpConfig, createItem, renameFile, sendObjRes, deleteFile } from './api';
-import { renameSchema, fetchSchema, createSchema, deleteSchema } from "./requet-schema";
+
+// Functions.
+import { 
+    connectLogin, 
+    fetchFiles, 
+    ftpDestroy, 
+    setFtpConfig, 
+    createItem, 
+    renameFile, 
+    sendObjRes, 
+    deleteFile,
+    bulkDelete
+} from './api';
+// Request schema
+import { 
+    renameSchema, 
+    fetchSchema, 
+    createSchema, 
+    deleteSchema, 
+    bulkDeleteSchema 
+} from "./requet-schema";
 
 const VALID_ACTIONS = {
     "fetch": {
@@ -19,6 +38,10 @@ const VALID_ACTIONS = {
         schema: createSchema,
         func: createItem
     },
+    "deleteBulk": {
+        schema: bulkDeleteSchema,
+        func: bulkDelete
+    }
 };
 
 export async function POST(request) {
@@ -45,20 +68,20 @@ export async function POST(request) {
     if (!response.success) {
 
         const errors = response.error.errors;
-        let errMap = {};
+        let errMap = [];
 
         errors.map((err) => {
-            return errMap[err.path[0]] = {
-                reason: err.message
-            };
+            errMap.push(err.path[0]);
+            console.log(err);
         })
 
         return sendResponse(
-            sendObjRes({
-                message: "Please Check your provided fields Or Provide Required Fields",
-                errors_for: errMap
-            }, 400, true)
-        , 400);
+            sendObjRes(
+                `Please Check your provided fields Or Provide Required Fields, Fields: ${errMap.join(", ")}`,
+                400,
+                true
+            ),
+            400);
     }
 
     const { host, user, pass, path = "/" } = response.data;

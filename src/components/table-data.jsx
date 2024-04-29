@@ -1,27 +1,32 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
     Tooltip,
     Typography,
     IconButton,
     Checkbox,
 } from "@material-tailwind/react";
-import { TrashIcon } from '@heroicons/react/24/solid';
 import FilePermsDialog from "@/components/dialogs/file-permissions-dialog";
 import TableNameItem from "@/components/table-name-item";
 import RenameItem from "./table-action-components/rename-item";
-import { RenameItemContext } from '../context/renameItem/RenameItemContext';
+import { RenameItemContext } from '../context/RenameItemContext';
 import PreviousPath from "./table-action-components/previous-path";
 import DeleteItem from "./table-action-components/delete-item";
 import path from 'path';
 import { useSearchPathContext } from '@/context/search-path';
+import { useBulkDeleteContext } from '@/context/bulk-delete';
+import { useConfirmationContext } from '@/context/confirmation';
 
 const TableData = (props) => {
 
     const context = useContext(RenameItemContext);
     const searchContext = useSearchPathContext();
+    const deleteContext = useBulkDeleteContext();
+    const confirmation = useConfirmationContext();
     const currentPath = props.currentPath;
     const TABLE_HEADS = ["Filename", "Permissions", "Size", "Last Modified", "Actions"];
+    let selectedItems = [];
 
+    const [fileItems, setFileItems] = useState();
     const [state, setState] = useState({
         isAllSelected: false,
         openPopover: false,
@@ -37,6 +42,24 @@ const TableData = (props) => {
 
     const parentPath = path.dirname(searchContext.state);
 
+    useEffect(() => {
+        if (deleteContext.items.length > 0) {
+            deleteContext.setIsBtnHidden(false);
+        } else {
+            deleteContext.setIsBtnHidden(true);
+        }
+
+        //Set the Files, this will help to delete files in bulk. 
+        for(const file of props.data){
+            setFileItems(prev => ({
+                ...prev,
+                [path.join(currentPath, file.name)]: file.type
+            }))
+        }
+
+    }, [deleteContext.items])
+
+
     const handleClick = (filename, perms) => {
         setState(prevState => ({
             ...prevState,
@@ -48,9 +71,9 @@ const TableData = (props) => {
 
     const handleSelectAll = () => {
         const rows = document.getElementsByClassName("selectFile");
-        
+
         let i;
-        
+
         for (i = 0; i < rows.length; i++) {
             rows[i].checked = !state.isAllSelected;
         }
@@ -59,38 +82,58 @@ const TableData = (props) => {
             ...prevState,
             isAllSelected: !prevState.isAllSelected
         }));
+
+        setSelectItems();
     };
 
     const handleChangeSelect = (e) => {
         const rows = document.getElementsByClassName("selectFile");
         let i;
 
-        if(state.isAllSelected && !e.target.checked){
+
+        if (state.isAllSelected && !e.target.checked) {
             setState(({
                 ...state,
                 isAllSelected: false
             }))
-        } else if(!state.isAllSelected){ //Basic logic to cheeck wether the all checkboxes are checked.
+        } else if (!state.isAllSelected) { //Basic logic to cheeck wether the all checkboxes are checked.
 
             let selectedRows = 0;
             for (i = 0; i < rows.length; i++) {
-                if(rows[i].checked){
+                if (rows[i].checked) {
                     selectedRows++;
                 }
             }
 
-            if(selectedRows === rows.length){
+            if (selectedRows === rows.length) {
                 setState(prev => ({
                     ...prev,
                     isAllSelected: true
                 }))
             }
         }
+
+        setSelectItems();
+    }
+
+    const setSelectItems = () => {
+        const rows = Array
+            .from(document.querySelectorAll(".selectFile:checked"))
+            .map(ele => ele.value); //Get Checkbox values that are checked.
+
+        let items = {};
+        for(const row of rows){
+            if(row in fileItems){
+                items[row] = fileItems[row];
+            }
+        };
+
+        console.log(items)
+        return;
+        // deleteContext.setItems(items);
     }
 
     const setRenameElement = (fileName, e) => {
-        e.preventDefault();
-
         let isRenaming = !state.renaming.isRenaming;
 
         if (state.renaming.isRenaming && state.renaming.name !== fileName) {
@@ -174,9 +217,9 @@ const TableData = (props) => {
                         <PreviousPath previousPath={parentPath} />
                     }
                     {props.data.map((file) => (
-                        <tr key={file.name} className="even:bg-blue-gray-50/50 hover:bg-blue-gray-50 duration-[1.1s]">
+                        <tr key={file.name} className="even:bg-blue-gray-50/50 hover:bg-blue-gray-50 duration-[1.1s]" >
                             <td>
-                                <Checkbox className='selectFile' onChange={handleChangeSelect}/>
+                                <Checkbox className='selectFile' onChange={handleChangeSelect} value={path.join(currentPath, file.name)} />
                             </td>
                             <td className='flex py-4'>
                                 <TableNameItem
@@ -213,23 +256,25 @@ const TableData = (props) => {
                             <td>
                                 <div className="flex gap-3 ">
                                     <RenameItem fileName={file.name} setRenameElement={setRenameElement} />
-                                    <DeleteItem fileName={file.name} type={file.type}/>
+                                    <DeleteItem fileName={file.name} type={file.type} />
                                 </div>
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </table >
 
             {/* Modal */}
-            {state.perms && (
-                <FilePermsDialog
-                    handleClick={handleClick}
-                    fileName={state.modalPermsFIle}
-                    permissionData={state.perms}
-                    open={state.open}
-                />
-            )}
+            {
+                state.perms && (
+                    <FilePermsDialog
+                        handleClick={handleClick}
+                        fileName={state.modalPermsFIle}
+                        permissionData={state.perms}
+                        open={state.open}
+                    />
+                )
+            }
         </>
     );
 };

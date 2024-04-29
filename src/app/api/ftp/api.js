@@ -147,15 +147,27 @@ export const deleteFile = ({ from, type }) => new Promise(async (resolve, reject
                         .then(() => {
                             deleteDir()
                             .then((rsp) => resolve(sendObjRes("The Directory(ies) Has been Deleted Successfully.", 200)))
-                            .catch((error) => reject(sendObjRes(error.message, error.code, true)));
                         })
-                        .catch((error) => reject(sendObjRes("Unable to delete file", error.code || 500, true)));
                 });
         } catch (error) {
-            reject(sendObjRes("Unable to delete file", error.code || 500, true));
+            reject(sendObjRes(error.message || "Unable to delete file", error.code || 500, true));
         }
     }
 });
+
+/**
+ * @param {array<string, number>} paths
+ */
+export const bulkDelete = ({ paths }) => {
+    let promises = [];
+    for(const [path, type] of Object.entries(paths)){
+        promises.push(deleteFile(path, type));
+    }
+
+    return Promise.all(promises)
+    .then((rsp) => sendObjRes("The files Has Been Deleted Successfuly.", 200))
+    .catch((err) => sendObjRes("Unable To Delete Files.", err.code || 550, true));
+}
 
 export const createItem = ({ type, name }) => new Promise(async (resolve, reject) => {
 

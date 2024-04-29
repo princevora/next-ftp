@@ -14,7 +14,8 @@ const ConfirmationContextProvider = ({ children }) => {
         modalTitle: "Confirmation !",
         modalDesc: "Are you sure?",
         isVisible: false,
-        isConfirmed: false
+        isConfirmed: false,
+        callback: null
     });
 
     return (

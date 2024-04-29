@@ -8,7 +8,7 @@ import {
 import { useFtpDetailsContext } from "@/context/ftp-details-context";
 import path from "path";
 import toast from "react-hot-toast";
-import { useConfirmationContext } from "@/context/renameItem/confirmation";
+import { useConfirmationContext } from "@/context/confirmation";
 
 export default function DeleteItem({ fileName, type }) {
 
@@ -37,19 +37,19 @@ export default function DeleteItem({ fileName, type }) {
         }
     })
 
-    // Handle Delete on click.
-    const handleClick = async () => {
+    const handleDelete = async () => {
+        // Due to we are using context callbacks so we will hide the modal. to show the promise toast as below
         confirmationContext.setState(prev => ({
             ...prev,
-            isVisible: true,
-            modalTitle: `Confirm Delete ${fileName}`,  //Title 
-            modalDesc: "Are you sure? You are deleting a file please confirm your action" //Desc
+            isVisible: false
         }));
 
+        
         const { endpoint, host, user, pass, currentPath } = ftpContext;
         const data = { host, user, pass, action: "delete" };
-
+        
         const name = path.join(currentPath, fileName);
+
         try {
             const response = deleteFile(data, name, endpoint);
 
@@ -73,6 +73,22 @@ export default function DeleteItem({ fileName, type }) {
         } catch (error) {
             toast.error("Unable to complete the request");
         }
+    }
+
+    // Handle Delete on click.
+    const handleClick = () => {
+        confirmationContext.setState(prev => ({
+            ...prev,
+            isVisible: true,
+            modalTitle: `Confirm Delete ${fileName}`,  //Title 
+            modalDesc: "Are you sure? You are deleting a file please confirm your action" //Desc
+        }));
+
+        // set the callback in confirmationContext
+        confirmationContext.setState(prev => ({
+            ...prev,
+            callback: handleDelete
+        }))
     }
 
     return (

@@ -1,5 +1,5 @@
-import { useConfirmationContext } from "../../context/renameItem/confirmation";
-import { RenameItemContext } from "../../context/renameItem/RenameItemContext";
+import { useConfirmationContext } from "../../context/confirmation";
+import { RenameItemContext } from "../../context/RenameItemContext";
 import React, { useContext, useRef } from "react";
 import {
     Button,
@@ -8,14 +8,13 @@ import {
     DialogBody,
     DialogFooter,
 } from "@material-tailwind/react";
-import path from "path";
+import { Html } from "next/document";
 
 export default function Confirmation({ handleOnConfirm }) {
 
     const context = useConfirmationContext();
     const open = context.state.isVisible;
     const dialogElem = useRef(null);
-    const rContext = useContext(RenameItemContext);
 
     const handleOpen = () => {
         context.setState(prev => ({
@@ -31,10 +30,8 @@ export default function Confirmation({ handleOnConfirm }) {
         }))
 
         if(value){
-            return handleOnConfirm();
+            context.state.callback();
         }
-
-        return;
     }
 
     return (
