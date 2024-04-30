@@ -12,9 +12,9 @@ import { RenameItemContext } from '../context/RenameItemContext';
 import PreviousPath from "./table-action-components/previous-path";
 import DeleteItem from "./table-action-components/delete-item";
 import path from 'path';
-import { useSearchPathContext } from '@/context/search-path';
-import { useBulkDeleteContext } from '@/context/bulk-delete';
-import { useConfirmationContext } from '@/context/confirmation';
+import { useSearchPathContext } from '../context/search-path';
+import { useBulkDeleteContext } from '../context/bulk-delete';
+import { useConfirmationContext } from '../context/confirmation';
 
 const TableData = (props) => {
 
@@ -24,7 +24,6 @@ const TableData = (props) => {
     const confirmation = useConfirmationContext();
     const currentPath = props.currentPath;
     const TABLE_HEADS = ["Filename", "Permissions", "Size", "Last Modified", "Actions"];
-    let selectedItems = [];
 
     const [fileItems, setFileItems] = useState();
     const [state, setState] = useState({
@@ -43,7 +42,11 @@ const TableData = (props) => {
     const parentPath = path.dirname(searchContext.state);
 
     useEffect(() => {
-        if (deleteContext.items.length > 0) {
+        // Get object length.
+        const len = Object.keys(deleteContext.items).length;
+        
+        // Check if the length is 0 or not
+        if (len > 0) {
             deleteContext.setIsBtnHidden(false);
         } else {
             deleteContext.setIsBtnHidden(true);
@@ -122,15 +125,16 @@ const TableData = (props) => {
             .map(ele => ele.value); //Get Checkbox values that are checked.
 
         let items = {};
+
+        // check if the object key is available in the array and its checked
+        // then put it in a new object
         for(const row of rows){
             if(row in fileItems){
                 items[row] = fileItems[row];
             }
         };
 
-        console.log(items)
-        return;
-        // deleteContext.setItems(items);
+        deleteContext.setItems(items);
     }
 
     const setRenameElement = (fileName, e) => {

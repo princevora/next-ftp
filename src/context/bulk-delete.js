@@ -9,7 +9,7 @@ export const useBulkDeleteContext = () => {
 }
 
 const BulkDeleteContextProvider = ({ children }) => {
-    const [items, setItems] = useState([]);
+    const [items, setItems] = useState({});
     const [isBtnHidden, setIsBtnHidden] = useState(true);
 
     return (

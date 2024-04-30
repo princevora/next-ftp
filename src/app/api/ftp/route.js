@@ -10,7 +10,8 @@ import {
     renameFile, 
     sendObjRes, 
     deleteFile,
-    bulkDelete
+    bulkDelete,
+    tryPassive
 } from './api';
 // Request schema
 import { 
@@ -95,21 +96,27 @@ export async function POST(request) {
 
     // Set FTP Config
     setFtpConfig(ftpConfig, path);
+
+    // Main handler
     try {
         const validate = await validateAction(action)
         const actionFunction = VALID_ACTIONS[action];
 
         // Login
         await connectLogin()
+        .then(() => {
+            //Switch to passive mode.
+            tryPassive();
+        });
 
         const responseData = await VALID_ACTIONS[action].func(response.data);
 
         if (responseData.success) {
             await ftpDestroy(); //Destroy Ftp connection
-            return sendResponse(responseData, responseData.status ?? 200);
+            return sendResponse(responseData, responseData.status || 200);
         }
 
-        throw new Error(responseData)
+        return sendResponse(responseData, responseData.status || 500)
 
     } catch (error) {
         return sendResponse(error, error.status);

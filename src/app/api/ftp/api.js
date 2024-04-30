@@ -27,9 +27,10 @@ export const connectLogin = () => new Promise((resolve, reject) => {
 });
 
 export const getFtpFIles = () => new Promise((resolve, reject) => {
+    
     ftp.ls(path, (error, res) => {
         if (error) {
-            return reject(
+            reject(
                 sendObjRes(error.message, error.code, true)
             );
         }
@@ -51,8 +52,19 @@ export const fetchFiles = async () => {
     } catch (error) {
 
         // Send error if anything occurs wrong.
-        return sendObjRes(error, error.code ?? 400, true);
+        return sendObjRes(error.data.message || "Unable to fetch", error.status || 400, true);
     }
+}
+
+export const tryPassive = () => {
+    ftp.raw("PASV", (err, data) => {
+        if(err){
+            return sendObjRes("Unable to switch to passive mode", err.code, true);
+        }
+        else{
+            console.log(data);
+        }
+    })
 }
 
 const renameFtpFile = (from, to) => new Promise((resolve, reject) => {
@@ -97,7 +109,7 @@ export const deleteFile = ({ from, type }) => new Promise(async (resolve, reject
         })
     }
     else {
-        const deleteDir = (filePath) => new Promise((resolve, reject) => {
+        const deleteDir = () => new Promise((resolve, reject) => {
             ftp.raw("RMD", from, (err, data) => {
                 if (err) {
                     reject({
@@ -161,12 +173,12 @@ export const deleteFile = ({ from, type }) => new Promise(async (resolve, reject
 export const bulkDelete = ({ paths }) => {
     let promises = [];
     for(const [path, type] of Object.entries(paths)){
-        promises.push(deleteFile(path, type));
+        promises.push(deleteFile({from: path, type}));
     }
 
     return Promise.all(promises)
     .then((rsp) => sendObjRes("The files Has Been Deleted Successfuly.", 200))
-    .catch((err) => sendObjRes("Unable To Delete Files.", err.code || 550, true));
+    .catch((err) => sendObjRes(err.message || "Unable To Delete Files.", err.code || 550, true));
 }
 
 export const createItem = ({ type, name }) => new Promise(async (resolve, reject) => {

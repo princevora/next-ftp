@@ -25,7 +25,6 @@ import { useBulkDeleteContext } from '@/context/bulk-delete';
 function Connect({ params }) {
 
     const context = useContext(RenameItemContext);
-    const errorContext = useContext(ErrorContext);
     const rContext = useConfirmationContext() //Rename confirmation context
     const renameInputRef = useRef(null);
     const ftpDetailsContext = useFtpDetailsContext();
@@ -149,11 +148,14 @@ function Connect({ params }) {
                 body: JSON.stringify(paramData),
             });
 
-            if (!response.ok) {
-                throw new Error("Unable To Complete The Request");
-            }
-
+            
             const responseData = await response.json();
+            
+            if (!response.ok) {
+                const {message} = responseData.data;
+                reject(message);
+            }
+            
             const sorted = Object.values(responseData.data.ftp_files).sort((a, b) => {
                 return b.type - a.type;
             });
@@ -161,7 +163,16 @@ function Connect({ params }) {
             resolve(sorted)
 
         } catch (error) {
-            reject("Unable to complete the request please check your inputs");
+
+            // Set back the files if found error.
+            if(state.ftp_files !== null){
+                setState({
+                    ...state,
+                    is_table_hidden: false
+                })
+            }
+
+            reject(error || "Unable to complete the request please check your inputs");
         }
     })
 
