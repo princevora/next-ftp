@@ -1,4 +1,5 @@
 import {
+    Button,
     Typography,
 } from "@material-tailwind/react";
 import {
@@ -23,7 +24,7 @@ function DeleteSelected() {
         }
     }
 
-    const deleteSelected = (data, endpoint) => new Promise( async (resolve, reject) => {
+    const deleteSelected = (data, endpoint) => new Promise(async (resolve, reject) => {
         const response = await fetch(endpoint, {
             method: "POST",
             headers: {
@@ -78,7 +79,6 @@ function DeleteSelected() {
 
     const handleClick = () => {
         setBaseFiles();
-        console.log(files);
         const message = `You Are deleting The Following File(s) or Folder(s) Please confirm your Action. files: ${files.join(", ")}`;
 
         confirmationContext.setState(prev => ({
@@ -91,15 +91,14 @@ function DeleteSelected() {
     }
 
     return (
-        !context.isBtnHidden && (
-            <Typography as="a" href="#" variant="small" color="blue-gray" className="duration-700  text-xl p-2 font-medium bg-gray-200 rounded" >
+        <Button variant="text" onClick={handleClick} disabled={context.isDisabled} className="text-xl p-2 font-medium bg-gray-200">
+            <Typography as="a" href="#" variant="small" color="blue-gray" className="duration-700 rounded" >
                 <TrashIcon
-                    onClick={handleClick}
                     height={15}
                     width={15}
                 />
             </Typography >
-        )
+        </Button>
     )
 }
 

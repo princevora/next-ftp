@@ -1,4 +1,5 @@
 import {
+    Button,
     Typography,
 } from "@material-tailwind/react";
 import {
@@ -12,13 +13,14 @@ function CreateItem() {
     const handleClick = () => context.setIsVisible(prev => !prev.isVisible);        
 
     return (
-        <Typography as="a" href="#" variant="small" color="blue-gray" className="text-xl p-2 font-medium bg-gray-200 rounded">
-            <PlusIcon
-                onClick={handleClick}
-                height={15}
-                width={15}
-            />
-        </Typography>
+        <Button variant="text" onClick={handleClick} className="rounded text-xl p-2 font-medium bg-gray-200">
+            <Typography as="a" href="#" variant="small" color="blue-gray">
+                <PlusIcon
+                    height={15}
+                    width={15}
+                />
+            </Typography>
+        </Button>
     )
 }
 

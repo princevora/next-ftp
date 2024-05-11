@@ -15,6 +15,8 @@ import path from 'path';
 import { useSearchPathContext } from '../context/search-path';
 import { useBulkDeleteContext } from '../context/bulk-delete';
 import { useConfirmationContext } from '../context/confirmation';
+import ContextManu from "./context-menu";
+import { useContextMenu } from '@/context/context-menu';
 
 const TableData = (props) => {
 
@@ -24,6 +26,7 @@ const TableData = (props) => {
     const confirmation = useConfirmationContext();
     const currentPath = props.currentPath;
     const TABLE_HEADS = ["Filename", "Permissions", "Size", "Last Modified", "Actions"];
+    const contextMenu = useContextMenu();
 
     const [fileItems, setFileItems] = useState();
     const [state, setState] = useState({
@@ -47,9 +50,9 @@ const TableData = (props) => {
         
         // Check if the length is 0 or not
         if (len > 0) {
-            deleteContext.setIsBtnHidden(false);
+            deleteContext.setIsDisabled(false);
         } else {
-            deleteContext.setIsBtnHidden(true);
+            deleteContext.setIsDisabled(true);
         }
 
         //Set the Files, this will help to delete files in bulk. 
@@ -66,7 +69,7 @@ const TableData = (props) => {
     const handleClick = (filename, perms) => {
         setState(prevState => ({
             ...prevState,
-            perms: perms && Object.entries(perms),
+            perms,
             open: !prevState.open,
             modalPermsFIle: filename
         }));
@@ -186,6 +189,23 @@ const TableData = (props) => {
         return Math.round(Number(intSize).toFixed(2)) + " " + sizes[unitIndex];
     }
 
+    const handleRightClick = (e) => {
+        e.preventDefault();
+        const {isVisible} = contextMenu;
+        contextMenu.setIsVisible(!isVisible);
+
+        if(!isVisible === true){
+            contextMenu.setDisplay("block");
+            
+            contextMenu.setPosition({
+                x: e.clientX,
+                y: e.clientY,
+            })
+        } else {
+            contextMenu.setDisplay("none");
+        }
+    }
+
     const tableNameItemProps = {
         renameInputRef: props.renameInputRef,
         currentState: state.renaming,
@@ -194,8 +214,11 @@ const TableData = (props) => {
     }
 
     return (
-        <>
-            <table className="overflow-hidden w-full min-w-max text-left">
+        <div className='relative'>
+            {/* Context menu */}
+            <ContextManu />
+
+            <table className="overflow-hidden w-full text-left">
                 <thead>
                     <tr>
                         <th className='border-b border-blue-gray-100 bg-blue-gray-50'>
@@ -221,7 +244,7 @@ const TableData = (props) => {
                         <PreviousPath previousPath={parentPath} />
                     }
                     {props.data.map((file) => (
-                        <tr key={file.name} className="even:bg-blue-gray-50/50 hover:bg-blue-gray-50 duration-[1.1s]" >
+                        <tr onContextMenuCapture={handleRightClick} key={file.name} className="even:bg-blue-gray-50/50 hover:bg-blue-gray-50 duration-[1.1s]" >
                             <td>
                                 <Checkbox className='selectFile' onChange={handleChangeSelect} value={path.join(currentPath, file.name)} />
                             </td>
@@ -237,7 +260,7 @@ const TableData = (props) => {
                                         <IconButton
                                             variant="text"
                                             onClick={
-                                                () => handleClick(file.name, file.userPermissions)
+                                                () => handleClick(file.name, file)
                                             }
                                             className="rounded-full h-10 w-10 bg-blue-gray-50" size='sm'>
                                             <i className="fas fa-info" />
@@ -279,7 +302,7 @@ const TableData = (props) => {
                     />
                 )
             }
-        </>
+        </div>
     );
 };
 

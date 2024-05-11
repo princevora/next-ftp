@@ -5,8 +5,18 @@ export default function CheckConnection() {
     const [isOnline, setIsOnline] = useState(true);
 
     useEffect(() => {
+        setIsOnline(navigator.onLine);
+
         const handleCheck = () => {
-            setIsOnline(navigator.onLine);
+            const status = navigator.onLine;
+            
+            setIsOnline(status);
+            
+            if(status){
+                // Reload the files when the user is online 
+                const event = new CustomEvent("files:fetch");
+                window.dispatchEvent(event);
+            }
         }
 
         window.addEventListener("online", handleCheck);

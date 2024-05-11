@@ -40,7 +40,11 @@ const TableNameItem = (props) => {
             <>
                 <ItemIcon fileName={name} fileType={type}/>
                 <Typography variant="small" color="blue-gray" className="font-normal px-2">
-                    <a href='#' onClick={() => props.handleChangePath(name)}>
+                    <a href='#' onClick={(e) => {
+                        e.preventDefault();
+
+                        props.handleChangePath(name)
+                    }}>
                         {printName(name)}
                     </a>
                 </Typography>

@@ -1,4 +1,5 @@
-import { ZodString, string, z } from 'zod';
+import { z } from 'zod';
+import { zfd } from 'zod-form-data';
 
 const createSen = (fieldName) => {
     return `The ${fieldName} Perameter is reqired`;
@@ -25,6 +26,20 @@ export const deleteSchema = z.object({
 export const fetchSchema = z.object({
     ...mainParmas,
     path: z.string().optional(),
+})
+
+export const getFileSchema = z.object({
+    ...mainParmas,
+    path: z.string()
+})
+
+// Special schema for validating formdata / multipart
+export const uploadSchema = zfd.formData({
+    host: zfd.text(),
+    user: zfd.text(),
+    pass: zfd.text(),
+    path: zfd.text().optional(),
+    file: zfd.file()
 })
 
 export const bulkDeleteSchema = z.object({

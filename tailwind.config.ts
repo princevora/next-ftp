@@ -7,7 +7,9 @@ const config: Config = withMT({
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {},
-  plugins: [],
+  plugins: [
+    require("daisyui"),
+  ],
 });
 
 export default config;

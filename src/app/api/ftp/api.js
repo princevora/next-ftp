@@ -1,5 +1,7 @@
+import { File } from "buffer";
 import jsftp from "jsftp";
 import * as pathModule from "path"
+import mime from "mime-types";
 
 let ftp, user, pass, path;
 // Create a JsFTP config
@@ -9,14 +11,16 @@ export const setFtpConfig = (data, filePath) => {
     user = data.user;
     pass = data.pass;
     path = filePath;
+    // ftp.get("/", (err, socket) => {
+    //     socket.stre
+    // })
 }
 
-export const connectLogin = () => new Promise((resolve, reject) => {
-    ftp.auth(user, pass, (error, data) => {
+export const connectLogin = () => new Promise(async (resolve, reject) => {
+    await ftp.auth(user, pass, (error, data) => {
         if (error) {
             // Return Response
             reject(
-
                 sendObjRes(error.message, error.code, true)
             );
         }
@@ -27,7 +31,7 @@ export const connectLogin = () => new Promise((resolve, reject) => {
 });
 
 export const getFtpFIles = () => new Promise((resolve, reject) => {
-    
+
     ftp.ls(path, (error, res) => {
         if (error) {
             reject(
@@ -58,11 +62,8 @@ export const fetchFiles = async () => {
 
 export const tryPassive = () => {
     ftp.raw("PASV", (err, data) => {
-        if(err){
+        if (err) {
             return sendObjRes("Unable to switch to passive mode", err.code, true);
-        }
-        else{
-            console.log(data);
         }
     })
 }
@@ -135,30 +136,30 @@ export const deleteFile = ({ from, type }) => new Promise(async (resolve, reject
                 .then(async (rsp) => {
                     let promises = [];
                     let mainParent;
-                     
+
                     const files = rsp.data.ftp_files;
 
-                    if(files.length !== 0){
-                        for(const file of files){
+                    if (files.length !== 0) {
+                        for (const file of files) {
                             const { name, type } = file;
                             if (file.type === 1) { //For the child folders
-                                promises.push(deleteFile({from: `${from}/${name}`, type}));
+                                promises.push(deleteFile({ from: `${from}/${name}`, type }));
                             }
                             else { //for the child files
-                                promises.push(deleteFile({from: `${from}/${name}`, type}));
+                                promises.push(deleteFile({ from: `${from}/${name}`, type }));
                             }
                         }
-                       
+
                         mainParent = pathModule.dirname(path);
                     }
-                    else{
+                    else {
                         promises.push([]);
                     }
 
                     await Promise.all(promises)
                         .then(() => {
                             deleteDir()
-                            .then((rsp) => resolve(sendObjRes("The Directory(ies) Has been Deleted Successfully.", 200)))
+                                .then((rsp) => resolve(sendObjRes("The Directory(ies) Has been Deleted Successfully.", 200)))
                         })
                 });
         } catch (error) {
@@ -167,18 +168,45 @@ export const deleteFile = ({ from, type }) => new Promise(async (resolve, reject
     }
 });
 
+export const uploadFile = (prop) => new Promise(async (resolve, reject) => {
+    if (!prop.file instanceof File) {
+        reject(sendObjRes("Cannot Accept This file."));
+    }
+    else {
+        try {
+            const file = prop.file;
+            const arrayBuffer = await file.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const path = prop?.path || "/";
+            const remotePath = pathModule.join(path, file.name).replaceAll("\\", "/");
+
+            ftp.put(buffer, remotePath, (err) => {
+                if (err) {
+                    reject(sendObjRes(err.message, err.code, true));
+                }
+                else {
+                    resolve(sendObjRes("The file has been uploaded successfully.", 200));
+                }
+            })
+
+        } catch (error) {
+            return sendObjRes("Unable to upload the file", 553, true);
+        }
+    }
+})
+
 /**
  * @param {array<string, number>} paths
  */
-export const bulkDelete = ({ paths }) => {
+export const bulkDelete = async ({ paths }) => {
     let promises = [];
-    for(const [path, type] of Object.entries(paths)){
-        promises.push(deleteFile({from: path, type}));
+    for (const [path, type] of Object.entries(paths)) {
+        promises.push(deleteFile({ from: path, type }));
     }
 
     return Promise.all(promises)
-    .then((rsp) => sendObjRes("The files Has Been Deleted Successfuly.", 200))
-    .catch((err) => sendObjRes(err.message || "Unable To Delete Files.", err.code || 550, true));
+        .then((rsp) => sendObjRes("The files Has Been Deleted Successfuly.", 200))
+        .catch((err) => sendObjRes(err.message || "Unable To Delete Files.", err.code || 550, true));
 }
 
 export const createItem = ({ type, name }) => new Promise(async (resolve, reject) => {
@@ -220,6 +248,33 @@ export const createItem = ({ type, name }) => new Promise(async (resolve, reject
     }
 })
 
+export const getFile = async ({ path }) => {
+    return new Promise((resolve, reject) => {
+        let blob;
+
+        ftp.get(path, (err, socket) => {
+            if (err) {
+                console.error("Error:", err);
+                reject(err);
+            }
+
+            const chunks = [];
+            socket.on('data', chunk => {
+                chunks.push(chunk);
+            });
+            socket.on('close', () => {
+                const { base } = pathModule.parse(path);
+                const mimeType = mime.lookup(base) || 'application/octet-stream';
+
+                const fileContent = Buffer.concat(chunks);
+                blob = new Blob([fileContent], { type: mimeType });
+                resolve({ success: true, isBlob: true, blob: blob, isDownloadable: true });
+            });
+
+            socket.resume();
+        });
+    });
+};
 
 export const renameFile = async ({ from, to }) => {
 

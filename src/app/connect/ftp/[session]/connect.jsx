@@ -1,26 +1,21 @@
 "use client";
 
+import { useState, useEffect, useContext, useRef } from 'react';
 import { useConfirmationContext } from '@/context/confirmation';
-import { ErrorContext } from '@/context/ftperrors-collapse/errors-collapse-context';
 import { RenameItemContext } from "@/context/RenameItemContext";
-import { Card } from '@material-tailwind/react';
 import { useFtpDetailsContext } from '@/context/ftp-details-context';
-import Confirmation from "@/components/dialogs/confirmation";
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import TableSkeleton from "@/components/skeletons/table-skeleton";
-import SearchPath from "@/components/tableDataHeader/search-path";
-import CreateItem from "@/components/tableDataHeader/create-item";
-import DeleteSelected from "@/components/tableDataHeader/delete-selected";
-import CreateItemDialog from "@/components/dialogs/create-item";
-import TableData from "@/components/table-data";
-import toast from 'react-hot-toast';
-import path, { resolve } from 'path';
 import { usePasswordContext } from '@/context/encrypt-password';
-import CryptoJs from "crypto-js";
-import ImportHotToast from '@/components/import-toaster';
-import CheckConnection from '@/components/check-connection';
 import { useSearchPathContext } from '@/context/search-path';
 import { useBulkDeleteContext } from '@/context/bulk-delete';
+import { useSideBarContext } from '@/context/sidebar';
+import { findAndCheckOrSetValue } from "@/helper";
+import Dialogs from "./modal-group/modals";
+import Confirmation from "@/components/dialogs/confirmation";
+import TableSkeleton from "@/components/skeletons/table-skeleton";
+import TableData from "@/components/table-data";
+import toast from 'react-hot-toast';
+import CryptoJs from "crypto-js";
+import * as pathModule from 'path';
 
 function Connect({ params }) {
 
@@ -32,6 +27,7 @@ function Connect({ params }) {
     const searchContext = useSearchPathContext();
     const deleteContext = useBulkDeleteContext();
     const confirmation = useConfirmationContext();
+    const sidebar = useSideBarContext();
 
     // Get Url Query Data.
     const encData = CryptoJs.AES.decrypt(decodeURIComponent(params.session), password);
@@ -67,8 +63,20 @@ function Connect({ params }) {
     };;
 
     useEffect(() => {
+        const obj = {
+            has: {
+                folder: {
+                    prince: {
+                        isVisible: true,
+                        isfren: true,
+                        std: 11
+                    }
+                }
+            }
+        }
+
         const handleFetchFiles = (data) => {
-            const path = data.detail.path ?? '/';
+            const path = data?.detail?.path || '/';
             loadFiles(path);
         }
 
@@ -97,7 +105,7 @@ function Connect({ params }) {
     const loadFiles = async (path) => {
 
         // Show Toaster and load the files too.
-        const response = fetchFileData(path ?? state.ftp_path);
+        const response = fetchFileData(path || state.ftp_path);
 
         await toast.promise(
             response,
@@ -122,8 +130,15 @@ function Connect({ params }) {
     }
 
     const fetchFileData = (path = "/") => new Promise(async (resolve, reject) => {
+        let isRootReq = false; //Check wether the path is empty and then set this to true. so we can set the root folders for sidebar. 
 
-        if (path === "") path = "/";
+        if (path === "") {
+            path = "/";
+        }
+
+        if (path === "/") {
+            isRootReq = true;
+        }
 
         // empty the selected items for for delete items component
         deleteContext.setItems([]);
@@ -148,24 +163,102 @@ function Connect({ params }) {
                 body: JSON.stringify(paramData),
             });
 
-            
             const responseData = await response.json();
-            
+
             if (!response.ok) {
-                const {message} = responseData.data;
+                const { message } = responseData.data;
                 reject(message);
             }
-            
+
             const sorted = Object.values(responseData.data.ftp_files).sort((a, b) => {
                 return b.type - a.type;
             });
+
+            // Set the root folder if its the root path.
+            isRootReq && sidebar.roots == null && sidebar.setRoots(sorted);
+
+            const currentPath = ftpDetailsContext.state.currentPath;
+
+            // Set the current Path Roots. if the path isnt root path.
+            const lastParse = pathModule.parse(currentPath);
+            const crParse = pathModule.parse(path)
+            const crBase = crParse.base; //Current Path basename
+            const lrBase = lastParse.base; //Last Path basename
+            const dirs = sorted.filter((dir) => { return dir.type == 1 });
+            const { currentRoots } = sidebar
+            let currentRootsPath = null;
+            // Get the index of the current Basename (path).
+            const indexs = path.split("/").filter((p) => { return p !== '' });
+            const solidObjectPath = indexs.join(".");
+            let currentValidPath;
+
+            findAndCheckOrSetValue(currentRoots, indexs[indexs.length - 1], (v, p) => {
+                if (p !== null) {
+                    currentValidPath = p.split(".").shift();
+                }
+            }, []);
+
+            if (!isRootReq && currentRoots !== null && dirs.length >= 1 && currentValidPath == indexs[0]) {
+                const newKeys = {};
+                dirs.forEach(dir => {
+                    newKeys[dir.name] = {}
+                });
+
+                findAndCheckOrSetValue(currentRoots, indexs[indexs.length - 1], (v, p) => {
+                    if (p !== null) {
+                        currentRootsPath = p;
+                    }
+                }, [], newKeys);
+            }
+            else if (!isRootReq && dirs.length >= 1) {
+                const roots = {}
+
+                dirs.forEach(dir => {
+                    if (!roots[crBase])
+                        roots[crBase] = {}
+
+                    roots[crBase][dir.name] = {}
+                })
+
+                sidebar.setCurrentRoots(roots)
+            }
+
+            // if (!isRootReq && crParse.dir.indexOf(lastParse.base) !== -1 && lastParse.base !== "") {
+
+            //     // console.log("Roots: ", sidebar.currentRoots, "bse:", crBase);
+
+            //     // if(findAndCheckOrSetValue(sidebar.currentRoots, crBase) !== undefined){
+            //     //     console.log("If: ", findAndCheckOrSetValue(sidebar.currentRoots, crBase));
+            //     //     findAndCheckOrSetValue(sidebar.currentRoots, crBase, {
+            //     //         [crBase]: sorted
+            //     //     })
+            //     // }else{
+            //     //     findAndCheckOrSetValue(sidebar.currentRoots, crBase, {
+            //     //         [crBase]: sorted
+            //     //     })
+            //     // };
+            //     // const newItem = sidebar.currentRoots.includes(crBase) ? curre
+
+            //     // const newItem = sidebar.currentRoots[{
+            //     //     [pathModule.basename(crParse)]: 
+            //     // }]
+            //     sidebar.setCurrentRoots(sorted);
+            // }
+            // else if (!isRootReq) {
+            //     sidebar.setCurrentRoots(sorted);
+            // }
+
+            ftpDetailsContext.setState(prev => ({
+                ...prev,
+                currentPath: path
+            }));
 
             resolve(sorted)
 
         } catch (error) {
 
             // Set back the files if found error.
-            if(state.ftp_files !== null){
+            if (state.ftp_files !== null) {
                 setState({
                     ...state,
                     is_table_hidden: false
@@ -177,8 +270,12 @@ function Connect({ params }) {
     })
 
     const handePath = (folderPath) => {
-        let followingPath = path.join(state.ftp_path, folderPath);
+        let followingPath = pathModule.join(state.ftp_path, folderPath);
         searchContext.setState(followingPath);
+        ftpDetailsContext.setState(prev => ({
+            ...prev,
+            currentPath: folderPath
+        }))
 
         setState(prevState => (
             {
@@ -188,25 +285,6 @@ function Connect({ params }) {
         );
 
         loadFiles(followingPath)
-    };
-
-    const handleSearch = () => {
-        const query = searchContext.state;
-
-        if (query == "") {
-            return toast.error("The search path cannot be empty");
-        }
-
-        if (state.ftp_path !== query) { //Prevent refresh of files if the query is similar to ftp path.
-            loadFiles(query);
-        }
-
-        setState(prevState => (
-            {
-                ...prevState,
-                ftp_path: query
-            })
-        );
     };
 
     const renameFile = (from, to) => new Promise(async (resolve, reject) => {
@@ -256,11 +334,11 @@ function Connect({ params }) {
         const { from, to } = context;
         let inputField;
 
-        const fromBaseName = path.basename(from);
+        const fromBaseName = pathModule.basename(from);
         const domain = to.split(".").pop();
         const lDomain = domain.toLowerCase();
         const normalizedtoBaseName = to.replace(domain, lDomain); //This lines will change the UpperCase Domain names to lowercase.
-        const toBaseName = path.basename(normalizedtoBaseName);
+        const toBaseName = pathModule.basename(normalizedtoBaseName);
 
         if (toBaseName === "") {
             return toast.error("The File Name Must not be empty");
@@ -290,7 +368,8 @@ function Connect({ params }) {
             callback: handleOnConfirm
         }))
 
-        const toBaseName = path.basename(context.to);
+        const toBaseName = pathModule.basename(context.to);
+        const fromBaseName = pathModule.basename(context.from);
         if (toBaseName == "") {
             return toast.error("The file name must not be empty");
         }
@@ -298,7 +377,7 @@ function Connect({ params }) {
             rContext.setState(prev => ({
                 ...prev,
                 modalTitle: "Rename Confirmation",
-                modalDesc: `Are you Sure? you are renaming a file: ${toBaseName}. please confirm your Action`,
+                modalDesc: `Are you Sure? you are renaming a file: ${fromBaseName}. please confirm your Action`,
                 isVisible: true
             }));
         }
@@ -313,29 +392,16 @@ function Connect({ params }) {
     }
 
     return (
-        <header className="relative max-w-[1000px] mx-auto mt-5 columns-auto bg-white p-8">
-            <div className="mx-auto">
-                <div className="mx-auto pt-12 pb-24  text-center">
-                    <Card className='mx-auto shadow-xl'>
-                        {!state.is_table_hidden && state.ftp_files ? (
-                            <>
-                                <SearchPath handleClick={handleSearch} />
-                                <div className="flex justify-end gap-2 p-4">
-                                    <DeleteSelected />
-                                    <CreateItem />
-                                </div>
-                                <Card className="h-auto w-full overflow-scroll md:overflow-hidden">
-                                    <TableData
-                                        {...tableDataProps}
-                                    />
-                                </Card>
-                            </>
-                        ) : (
-                            <TableSkeleton />
-                        )}
-                    </Card>
-                </div>
-            </div>
+        <>
+            {!state.is_table_hidden && state.ftp_files ? (
+                <section className='max-w-full w-[100%] text-blue-gray-400'>
+                    <TableData
+                        {...tableDataProps}
+                    />
+                </section>
+            ) : (
+                <TableSkeleton />
+            )}
 
             {/* Rename Confirmation Modal  */}
             {
@@ -344,16 +410,8 @@ function Connect({ params }) {
                 )
             }
 
-            {/* Create item dialog */}
-            <CreateItemDialog />
-
-            {/* Import hot toast */}
-            <ImportHotToast />
-
-            {/* Internet connection Footer */}
-            <CheckConnection />
-
-        </header>
+            <Dialogs />
+        </>
     );
 };
 

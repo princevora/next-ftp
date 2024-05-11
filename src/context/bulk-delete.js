@@ -10,10 +10,10 @@ export const useBulkDeleteContext = () => {
 
 const BulkDeleteContextProvider = ({ children }) => {
     const [items, setItems] = useState({});
-    const [isBtnHidden, setIsBtnHidden] = useState(true);
+    const [isDisabled, setIsDisabled] = useState(true);
 
     return (
-        <BulkDeleteContext.Provider value={{items, setItems, isBtnHidden, setIsBtnHidden}}>
+        <BulkDeleteContext.Provider value={{items, setItems, isDisabled, setIsDisabled}}>
             {children}
         </BulkDeleteContext.Provider>
     );

@@ -1,4 +1,4 @@
-export default function ItemIcon({ fileType, fileName }) {
+export default function ItemIcon({ fileType = 0, fileName }) {
     if (fileType === 1) {
         return <Icon className="fa-solid fa-folder" />;
     }

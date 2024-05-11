@@ -1,26 +1,33 @@
-import { z } from "zod";
+import { tuple, z } from "zod";
+import { headers as hs } from 'next/headers';
+import jsftp from "jsftp";
+import pathModule from "path";
 
-// Functions.
-import { 
-    connectLogin, 
-    fetchFiles, 
-    ftpDestroy, 
-    setFtpConfig, 
-    createItem, 
-    renameFile, 
-    sendObjRes, 
+// Functions
+import {
+    connectLogin,
+    fetchFiles,
+    ftpDestroy,
+    setFtpConfig,
+    createItem,
+    renameFile,
+    sendObjRes,
     deleteFile,
     bulkDelete,
-    tryPassive
+    uploadFile,
+    getFile
 } from './api';
 // Request schema
-import { 
-    renameSchema, 
-    fetchSchema, 
-    createSchema, 
-    deleteSchema, 
-    bulkDeleteSchema 
+import {
+    renameSchema,
+    fetchSchema,
+    createSchema,
+    deleteSchema,
+    bulkDeleteSchema,
+    uploadSchema,
+    getFileSchema
 } from "./requet-schema";
+import { NextResponse } from "next/server";
 
 const VALID_ACTIONS = {
     "fetch": {
@@ -42,29 +49,54 @@ const VALID_ACTIONS = {
     "deleteBulk": {
         schema: bulkDeleteSchema,
         func: bulkDelete
+    },
+    "upload": {
+        schema: uploadSchema,
+        func: uploadFile
+    },
+    "get_file": {
+        schema: getFileSchema,
+        func: getFile
     }
 };
 
-export async function POST(request) {
+export async function POST(request, res) {
 
     const actionSchema = z.object({
         action: z.string()
     })
 
-    const data = await request.json()
-        .catch((e) => {
-            return sendResponse(sendObjRes({ error: { message: "Please check your provided fields." } }, 400, true), 400);
-        });
+    const header = hs();
+    const contentType = header.get("content-type") || null;
+    let data;
+    let action;
+    let isJsonReq = true;
 
-    const actionResponse = actionSchema.safeParse(data);
+    if (contentType && contentType.includes('application/json')) {
+        data = await request.json()
+        action = data?.action || "fetch";
+
+    } else if (contentType && contentType.includes('multipart/form-data')) {
+        data = await request.formData();
+        action = data.get("action");
+        isJsonReq = false;
+    }
+
+    const actionResponse = actionSchema.safeParse({ action });
 
     if (!actionResponse.success) {
         return sendResponse(sendObjRes({ error: { message: "Please Provide an action to complete the request." } }, 400, true), 400)
     }
 
-    // If everything is well then get a response from the request schema
+    // Validate the Action if its valid or invalid.
+    const rsp = await validateAction(action).catch(err => {
+        return sendResponse(
+            sendObjRes("The Provided Action is invalid.", 400, true),
+            400);
+    })
 
-    const response = VALID_ACTIONS[data.action].schema.safeParse(data);
+    // If everything is well then get a response from the request schema
+    const response = VALID_ACTIONS[action].schema.safeParse(data);
 
     if (!response.success) {
 
@@ -73,7 +105,6 @@ export async function POST(request) {
 
         errors.map((err) => {
             errMap.push(err.path[0]);
-            console.log(err);
         })
 
         return sendResponse(
@@ -86,7 +117,6 @@ export async function POST(request) {
     }
 
     const { host, user, pass, path = "/" } = response.data;
-    const { action } = data;
 
     const ftpConfig = {
         host,
@@ -94,25 +124,24 @@ export async function POST(request) {
         pass,
     }
 
-    // Set FTP Config
-    setFtpConfig(ftpConfig, path);
-
     // Main handler
     try {
-        const validate = await validateAction(action)
-        const actionFunction = VALID_ACTIONS[action];
+
+        // Set FTP Config
+        setFtpConfig(ftpConfig, path);
 
         // Login
         await connectLogin()
-        .then(() => {
-            //Switch to passive mode.
-            tryPassive();
-        });
 
         const responseData = await VALID_ACTIONS[action].func(response.data);
 
         if (responseData.success) {
             await ftpDestroy(); //Destroy Ftp connection
+
+            if(responseData.isBlob && responseData.isDownloadable){
+                res.download(responseData.blob)
+            }
+
             return sendResponse(responseData, responseData.status || 200);
         }
 
@@ -123,13 +152,13 @@ export async function POST(request) {
     }
 }
 
-async function validateAction(action) {
+function validateAction(action) {
     return new Promise((resolve, reject) => {
         if (!VALID_ACTIONS.hasOwnProperty(action)) {
-            return reject({ error: { message: "The provided action is invalid" } }, 400);
+            reject(sendObjRes("The provided action is invalid", 400, true));
         }
         else {
-            return resolve(true);
+            resolve(true);
         }
     });
 }
@@ -147,9 +176,10 @@ function sendResponse(res, status) {
             'Content-Type': "application/json"
         }
     }
-
-    return new Response(JSON.stringify(res), {
-        status: status,
-        headers
+    const response = new NextResponse(JSON.stringify(res), {
+        headers: headers,
+        status: status
     });
+
+    return response;
 }

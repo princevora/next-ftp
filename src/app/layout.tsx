@@ -1,8 +1,9 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
-import { Layout, FixedPlugin } from "@/components";
+import { Layout } from "@/components";
 import UseGlobalContext from "@/context/all-context-provider";
+import { ThemeProvider } from 'next-themes';
 // import RenameItemContextProvider from "@/components/context/renameItem/RenameItemContext";
 // import { CollapseContextProivder } from "@/components/context/ftperrors-collapse/errors-collapse-context";
 
@@ -24,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light">
       <head>
         <link
           rel="stylesheet"
@@ -39,7 +40,6 @@ export default function RootLayout({
         <UseGlobalContext>
           <Layout>
             {children}
-            <FixedPlugin />
           </Layout>
         </UseGlobalContext>
       </body>

@@ -7,6 +7,7 @@ import {
     IconButton,
     Card,
     Typography,
+    Checkbox,
 } from "@material-tailwind/react";
 import React from "react";
 
@@ -18,7 +19,7 @@ export default function FilePermsDialog({ handleClick, fileName, permissionData,
                 <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/dialog.js"></script>
             </Head>
 
-            <Dialog size="xs" open={open} handler={handleClick}>
+            <Dialog size="md" open={open} handler={handleClick}>
                 <DialogHeader className="justify-between">
                     <IconButton
                         color="blue-gray"
@@ -50,8 +51,8 @@ export default function FilePermsDialog({ handleClick, fileName, permissionData,
                             className="py-3 font-semibold uppercase opacity-70"
                         >
                             Permissions for: {
-                                fileName.length > 22 
-                                ? fileName.slice(0, 20) + "..." : fileName  
+                                fileName.length > 22
+                                    ? fileName.slice(0, 20) + "..." : fileName
                             }
                         </Typography>
                         <Card className="h-full w-full">
@@ -62,31 +63,65 @@ export default function FilePermsDialog({ handleClick, fileName, permissionData,
                                             Permission Name
                                         </th>
                                         <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
-                                            Value
+                                            Read
+                                        </th>
+                                        <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
+                                            Write
+                                        </th>
+                                        <th className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
+                                            Exec
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {permissionData.map(([k, v], index) => {
-                                        return (
-                                            <React.Fragment key={`${k}-${index}`}>
-                                                <tr className="even:bg-blue-gray-50/50">
-                                                    <td className="p-4">
-                                                        <Typography variant="small" color="blue-gray" className="font-normal">
-                                                            {k.toUpperCase()}
-                                                        </Typography>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <Typography variant="small" color="blue-gray" className="font-normal">
-                                                            <b>
-                                                                {v.toString()}
-                                                            </b>
-                                                        </Typography>
-                                                    </td>
-                                                </tr>
-                                            </React.Fragment>
-                                        )
-                                    })}
+                                    <tr className="even:bg-blue-gray-50/50">
+                                        <td className="p-4">
+                                            <Typography variant="small" color="blue-gray" className="font-normal">
+                                                Owner
+                                            </Typography>
+                                        </td>
+                                        <td className="p-4">
+                                                <Checkbox defaultChecked={permissionData.userPermissions.read}/>
+                                        </td>
+                                        <td className="p-4">
+                                            <Checkbox defaultChecked={permissionData.userPermissions.write} />
+                                        </td>
+                                        <td className="p-4">
+                                            <Checkbox defaultChecked={permissionData.userPermissions.exec}/>
+                                        </td>
+                                    </tr>
+                                    <tr className="even:bg-blue-gray-50/50">
+                                        <td className="p-4">
+                                            <Typography variant="small" color="blue-gray" className="font-normal">
+                                                Owner
+                                            </Typography>
+                                        </td>
+                                        <td className="p-4">
+                                                <Checkbox defaultChecked={permissionData.groupPermissions.read}/>
+                                        </td>
+                                        <td className="p-4">
+                                            <Checkbox defaultChecked={permissionData.groupPermissions.write} />
+                                        </td>
+                                        <td className="p-4">
+                                            <Checkbox defaultChecked={permissionData.groupPermissions.exec}/>
+                                        </td>
+                                    </tr>
+                                    <tr className="even:bg-blue-gray-50/50">
+                                        <td className="p-4">
+                                            <Typography variant="small" color="blue-gray" className="font-normal">
+                                                Owner
+                                            </Typography>
+                                        </td>
+                                        <td className="p-4">
+                                                <Checkbox defaultChecked={permissionData.otherPermissions.read}/>
+                                        </td>
+                                        <td className="p-4">
+                                            <Checkbox defaultChecked={permissionData.otherPermissions.write} />
+                                        </td>
+                                        <td className="p-4">
+                                            <Checkbox defaultChecked={permissionData.otherPermissions.exec}/>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </Card>

@@ -132,9 +132,9 @@ export default function CreateItemDialog() {
         size="xs"
         open={context.isVisible}
         handler={handleOpen}
-        className="bg-transparent shadosw-none z-50"
+        className="bg-transparent shadosw-none z-50 overflow-auto"
       >
-        <Card className="mx-auto w-full max-w-[24rem]">
+        <Card className="mx-auto max-w-[24rem] w-full">
           <CardBody className="flex flex-col gap-4">
             <Typography variant="h4" color="blue-gray">
               Create New Item
@@ -154,7 +154,7 @@ export default function CreateItemDialog() {
             <Input onChange={handleChange} name="itemName" label="New file or folder name" size="lg" />
           </CardBody>
           <CardFooter className="pt-0">
-            <div className="grid grid-cols-[20%_auto] gap-2">
+            <div className="grid grid-cols-[20%_auto] sm:gap-2 gap-4 text-nowrap">
               <Button variant="text" className="bg-gray-100 flex justify-center gap-2" onClick={handleOpen} fullWidth>
                 <XMarkIcon />
               </Button>
