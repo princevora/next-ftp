@@ -45,12 +45,13 @@ function Connect({ params }) {
     const apiEndpoint = "/api/ftp";
 
     const [state, setState] = useState({
-        ftp_host: json?.ftp_host,
-        ftp_username: json?.ftp_username,
-        ftp_password: json?.ftp_password,
+        ftp_username: json?.ftp_username || "",
+        ftp_password: json?.ftp_password || "",
+        ftp_host: json?.ftp_host || "",
+        ftp_port: json?.ftp_port || 21,
         is_table_hidden: null,
-        ftp_files: null,
         searchPath: "/",
+        ftp_files: null,
         ftp_path: "/",
     });
 
@@ -59,6 +60,7 @@ function Connect({ params }) {
         host: state.ftp_host,
         user: state.ftp_username,
         pass: state.ftp_password,
+        port: state.ftp_port,
         action: "fetch", //Default to fetch action
     };;
 

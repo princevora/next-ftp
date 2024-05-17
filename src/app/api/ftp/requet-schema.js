@@ -9,6 +9,7 @@ const mainParmas = {
     host: z.string({ required_error: createSen("host") }).nonempty(),
     user: z.string({ required_error: createSen("user") }).nonempty(),
     pass: z.string({ required_error: createSen("pass") }).nonempty(),
+    port: z.number().default(21).optional(),
 }
 
 export const renameSchema = z.object({

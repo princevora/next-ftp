@@ -121,12 +121,13 @@ export async function POST(request, res) {
             400);
     }
 
-    const { host, user, pass, path = "/" } = response.data;
+    const { host, user, pass, path = "/", port = 21 } = response.data;
 
     const ftpConfig = {
         host,
         user,
         pass,
+        port
     }
 
     // Main handler

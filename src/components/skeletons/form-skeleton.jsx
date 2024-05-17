@@ -14,6 +14,7 @@ export default function FormSkeleton() {
                 <Skeleton className="rounded-full" height={42} />
                 <Skeleton height={42} />
                 <Skeleton height={42} />
+                <Skeleton height={42} />
                 
                 {/* Submit button skeleton */}
                 <div className="pt-3">

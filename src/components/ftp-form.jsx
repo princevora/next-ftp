@@ -6,7 +6,7 @@ import {
     Button,
 } from "@material-tailwind/react";
 
-function FtpDataForm({handleChange, handleSubmit}) {
+function FtpDataForm({handleChange, handleSubmit, formState}) {
     return (
         <form onSubmit={handleSubmit}>
             <Card className="w-96 shadow-2xl mt-4">
@@ -27,6 +27,13 @@ function FtpDataForm({handleChange, handleSubmit}) {
                         name="ftp_password"
                         label="Ftp Password"
                         size="lg"
+                        onChange={handleChange}
+                    />
+                    <Input
+                        name="ftp_port"
+                        label="Ftp Port"
+                        size="lg"
+                        value={formState.ftp_port}
                         onChange={handleChange}
                     />
                 </CardBody>
