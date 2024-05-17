@@ -25,6 +25,9 @@ You can access the FTP Client At http://localhost:3000/
 ## Encrypted Ftp Login System With Crypto JS
 ![Encrypted Login system](public/readme/image.png)
 
+## Fast And secure Connection
+![Secure connection](public/readme/image-3.png)
+
 ## Easy And fast Upload - Supports Multiple Uploads.
 ![Easy to download and upload files](public/readme/image-2.png)
 ![Easy to download and upload files](public/readme/image-1.png)
