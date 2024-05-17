@@ -14,7 +14,7 @@ const FtpDetailsContextProvider = ({ children }) => {
         user: "",
         pass: "",
         endpoint: "/api/ftp",
-        currentPath: ""
+        currentPath: "/",
     });
 
     return (

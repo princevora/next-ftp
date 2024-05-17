@@ -6,9 +6,9 @@ import {
     PencilIcon,
 } from "@heroicons/react/24/outline";
 
-function RenameItem({ fileName, setRenameElement }) {
+function RenameItem({ fileName, setRenameElement, className = "" }) {
     return (
-        <Typography as="a" href="#" variant="small" color="blue-gray" className="font-medium">
+        <Typography as="a" href="#" variant="small" color="blue-gray" className={`font-medium ${className}`}>
             <Tooltip content={`Rename: ${fileName}`}>
                 <PencilIcon
                     onClick={

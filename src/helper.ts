@@ -23,7 +23,8 @@ export function findAndCheckOrSetValue(
                 return callback(obj[prop], path)
                 // return callback(obj[prop], path); // Return the result of the callback directly
             } else if (typeof obj[prop] === 'object') {
-                result = findAndCheckOrSetValue(obj[prop], key, callback, [...paths, prop], newValue); // Recursive call
+                paths = [...paths, prop];
+                result = findAndCheckOrSetValue(obj[prop], key, callback, paths, newValue); // Recursive call
                 // return callback
                 if (result !== undefined && prop == key) {
 

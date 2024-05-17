@@ -15,13 +15,15 @@ import {
     deleteFile,
     bulkDelete,
     uploadFile,
-    getFile
+    downloadFile,
+    copy
 } from './api';
 // Request schema
 import {
     renameSchema,
     fetchSchema,
     createSchema,
+    copyFileSchema,
     deleteSchema,
     bulkDeleteSchema,
     uploadSchema,
@@ -56,7 +58,11 @@ const VALID_ACTIONS = {
     },
     "get_file": {
         schema: getFileSchema,
-        func: getFile
+        func: downloadFile
+    },
+    "copy": {
+        schema: copyFileSchema,
+        func: copy
     }
 };
 
@@ -72,14 +78,13 @@ export async function POST(request, res) {
     let action;
     let isJsonReq = true;
 
-    if (contentType && contentType.includes('application/json')) {
-        data = await request.json()
-        action = data?.action || "fetch";
-
-    } else if (contentType && contentType.includes('multipart/form-data')) {
+    if (contentType && contentType.includes('multipart/form-data')) {
         data = await request.formData();
         action = data.get("action");
         isJsonReq = false;
+    } else {
+        data = await request.json()
+        action = data?.action || "fetch";
     }
 
     const actionResponse = actionSchema.safeParse({ action });
@@ -138,11 +143,11 @@ export async function POST(request, res) {
         if (responseData.success) {
             await ftpDestroy(); //Destroy Ftp connection
 
-            if(responseData.isBlob && responseData.isDownloadable){
-                res.download(responseData.blob)
+            if(responseData?.blob !== undefined){
+                return sendResponse(responseData.blob, responseData.status || 200, responseData?.headers || null);
+            } else{
+                return sendResponse(responseData, responseData.status || 200);
             }
-
-            return sendResponse(responseData, responseData.status || 200);
         }
 
         return sendResponse(responseData, responseData.status || 500)
@@ -169,14 +174,22 @@ function validateAction(action) {
  * @param {string|object} res 
  * @param {number} status 
  */
-function sendResponse(res, status) {
-
-    const headers = {
+function sendResponse(res, status, responseHeader = null) {
+    let headers = {
         headers: {
             'Content-Type': "application/json"
         }
     }
-    const response = new NextResponse(JSON.stringify(res), {
+
+    if(responseHeader !== null && typeof responseHeader == "object"){
+        headers = responseHeader;
+    }
+
+    if(res instanceof Blob !== true){
+        res = JSON.stringify(res)
+    }
+    
+    const response = new NextResponse(res, {
         headers: headers,
         status: status
     });

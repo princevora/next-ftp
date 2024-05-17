@@ -1,6 +1,6 @@
 import { useConfirmationContext } from "../../context/confirmation";
 import { RenameItemContext } from "../../context/RenameItemContext";
-import React, { useContext, useRef } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import {
     Button,
     Dialog,
@@ -15,6 +15,8 @@ export default function Confirmation({ handleOnConfirm }) {
     const context = useConfirmationContext();
     const open = context.state.isVisible;
     const dialogElem = useRef(null);
+    let title = context.state.modalTitle;
+    title = title.length > 20 ? title.slice(0, 40) + "..." : title;
 
     const handleOpen = () => {
         context.setState(prev => ({
@@ -35,8 +37,8 @@ export default function Confirmation({ handleOnConfirm }) {
     }
 
     return (
-        <Dialog open={open} handler={handleOpen}>
-            <DialogHeader>{context.state.modalTitle}</DialogHeader>
+        <Dialog open={open} handler={handleOpen} className="h-auto">
+            <DialogHeader>{title}</DialogHeader>
             <DialogBody>
                 {context.state.modalDesc}
             </DialogBody>

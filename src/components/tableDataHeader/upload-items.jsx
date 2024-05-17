@@ -17,9 +17,10 @@ function UploadItems() {
 
     return (
         <Tooltip content="Upload Files">
-            <Button variant="text" onClick={handleClick} className="rounded text-xl p-2 font-medium bg-gray-200">
+            <Button variant="text" onClick={handleClick} className="rounded text-xl p-2 font-medium bg-gray-200 group">
                 <Typography as="a" href="#" variant="small" color="blue-gray">
                     <ArrowUpTrayIcon
+                        className="group-hover:animate-bounce duration-500 transform"
                         height={15}
                         width={15}
                     />

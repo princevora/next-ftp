@@ -11,12 +11,14 @@ import RenameItem from "./table-action-components/rename-item";
 import { RenameItemContext } from '../context/RenameItemContext';
 import PreviousPath from "./table-action-components/previous-path";
 import DeleteItem from "./table-action-components/delete-item";
+import DownloadItem from "./table-action-components/download-item";
 import path from 'path';
 import { useSearchPathContext } from '../context/search-path';
 import { useBulkDeleteContext } from '../context/bulk-delete';
 import { useConfirmationContext } from '../context/confirmation';
 import ContextManu from "./context-menu";
 import { useContextMenu } from '@/context/context-menu';
+import SelectionWrapper from "./selection-handler";
 
 const TableData = (props) => {
 
@@ -25,7 +27,7 @@ const TableData = (props) => {
     const deleteContext = useBulkDeleteContext();
     const confirmation = useConfirmationContext();
     const currentPath = props.currentPath;
-    const TABLE_HEADS = ["Filename", "Permissions", "Size", "Last Modified", "Actions"];
+    const TABLE_HEADS = { "Filename": "", "Permissions": "hidden sm:table-cell", "Size": "hidden sm:table-cell", "Last Modified": "hidden sm:table-cell", "Actions": "" };
     const contextMenu = useContextMenu();
 
     const [fileItems, setFileItems] = useState();
@@ -45,9 +47,27 @@ const TableData = (props) => {
     const parentPath = path.dirname(searchContext.state);
 
     useEffect(() => {
+
+        // Close context menu on click..
+        const handleContextMenyExit = () => {
+            let value = contextMenu.isVisible;
+            if (value) {
+                contextMenu.setIsVisible(!value);
+            }
+        }
+
+
+        const handleSetRename = (data) => {
+            const fileName = data?.detail.file_name;
+            setRenameElement(fileName);
+        }
+
+        window.addEventListener("click", handleContextMenyExit);
+        window.addEventListener("set:rename_ele", handleSetRename);
+
         // Get object length.
         const len = Object.keys(deleteContext.items).length;
-        
+
         // Check if the length is 0 or not
         if (len > 0) {
             deleteContext.setIsDisabled(false);
@@ -56,11 +76,16 @@ const TableData = (props) => {
         }
 
         //Set the Files, this will help to delete files in bulk. 
-        for(const file of props.data){
+        for (const file of props.data) {
             setFileItems(prev => ({
                 ...prev,
                 [path.join(currentPath, file.name)]: file.type
             }))
+        }
+
+        return () => {
+            window.removeEventListener("set:rename_ele", handleSetRename)
+            window.removeEventListener("click", handleContextMenyExit);
         }
 
     }, [deleteContext.items])
@@ -94,45 +119,40 @@ const TableData = (props) => {
 
     const handleChangeSelect = (e) => {
         const rows = document.getElementsByClassName("selectFile");
-        let i;
-
 
         if (state.isAllSelected && !e.target.checked) {
             setState(({
                 ...state,
                 isAllSelected: false
             }))
-        } else if (!state.isAllSelected) { //Basic logic to cheeck wether the all checkboxes are checked.
-
-            let selectedRows = 0;
-            for (i = 0; i < rows.length; i++) {
-                if (rows[i].checked) {
-                    selectedRows++;
-                }
-            }
-
-            if (selectedRows === rows.length) {
-                setState(prev => ({
-                    ...prev,
-                    isAllSelected: true
-                }))
-            }
         }
 
         setSelectItems();
     }
 
     const setSelectItems = () => {
+        const checkedRows = document.querySelectorAll(".selectFile:checked");
+        const normalRows = document.querySelectorAll(".selectFile");
+
         const rows = Array
-            .from(document.querySelectorAll(".selectFile:checked"))
+            .from(checkedRows)
             .map(ele => ele.value); //Get Checkbox values that are checked.
+
+        // Check if the length are same or not.
+        const selectAllStateValue = normalRows.length === rows.length;
+
+        setState(prev => ({
+            ...prev,
+            isAllSelected: selectAllStateValue
+        }))
 
         let items = {};
 
         // check if the object key is available in the array and its checked
         // then put it in a new object
-        for(const row of rows){
-            if(row in fileItems){
+
+        for (const row of rows) {
+            if (row in fileItems) {
                 items[row] = fileItems[row];
             }
         };
@@ -140,7 +160,7 @@ const TableData = (props) => {
         deleteContext.setItems(items);
     }
 
-    const setRenameElement = (fileName, e) => {
+    const setRenameElement = (fileName) => {
         let isRenaming = !state.renaming.isRenaming;
 
         if (state.renaming.isRenaming && state.renaming.name !== fileName) {
@@ -160,15 +180,15 @@ const TableData = (props) => {
         }));
     };
 
-    const handleRenameChange = (e) => {
-        setState(prevState => ({
-            ...prevState,
-            renaming: {
-                ...prevState.renaming,
-                renamingName: e.target.value
-            }
-        }));
-    };
+    // const handleRenameChange = (e) => {
+    //     setState(prevState => ({
+    //         ...prevState,
+    //         renaming: {
+    //             ...prevState.renaming,
+    //             renamingName: e.target.value
+    //         }
+    //     }));
+    // };
 
     const dateTime = (intTime) => {
         const options = { month: "short", day: "numeric", year: "numeric" };
@@ -177,7 +197,7 @@ const TableData = (props) => {
         return time.toLocaleString("en-us", options);
     };
 
-    const GetSize = ({ intSize }) => {
+    const getSize = (intSize) => {
         const sizes = ["B", "KB", "MB", "GB", "TB"];
         let unitIndex = 0;
 
@@ -189,14 +209,17 @@ const TableData = (props) => {
         return Math.round(Number(intSize).toFixed(2)) + " " + sizes[unitIndex];
     }
 
-    const handleRightClick = (e) => {
+    const handleRightClick = (e, file) => {
         e.preventDefault();
-        const {isVisible} = contextMenu;
+        const { isVisible } = contextMenu;
         contextMenu.setIsVisible(!isVisible);
 
-        if(!isVisible === true){
+        if (!isVisible === true) {
             contextMenu.setDisplay("block");
-            
+            contextMenu.setElement(file);
+
+            // to call the setrename element we will save the function in the state.
+
             contextMenu.setPosition({
                 x: e.clientX,
                 y: e.clientY,
@@ -204,6 +227,33 @@ const TableData = (props) => {
         } else {
             contextMenu.setDisplay("none");
         }
+    }
+
+    const handleClickToSelect = (filePath, index) => {
+
+        // Set the Items TO empty 
+        deleteContext.setItems({});
+
+        const rows = document.getElementsByClassName("selectFile");
+
+        /**
+         * Get Checked Rows While our selected (clicked) row might be checked or unchecked
+         * So we will assign it true
+         * then we will run a loop for the checked boxes as we given the selected row its true value
+         * and even if our selected row might be exists in checked boxes
+         * it will dont affect our app behaviour because we are running the loop for checked rows not for the all rows. 
+         */
+        const checkedRows = document.querySelectorAll(".selectFile:checked");
+
+        for (const row of checkedRows) {
+            row.checked = false;
+        }
+
+        rows[index].checked = true;
+
+
+        deleteContext.setItems(filePath);
+        setSelectItems();
     }
 
     const tableNameItemProps = {
@@ -214,7 +264,7 @@ const TableData = (props) => {
     }
 
     return (
-        <div className='relative'>
+        <>
             {/* Context menu */}
             <ContextManu />
 
@@ -224,14 +274,14 @@ const TableData = (props) => {
                         <th className='border-b border-blue-gray-100 bg-blue-gray-50'>
                             <Checkbox onChange={handleSelectAll} checked={state.isAllSelected} />
                         </th>
-                        {TABLE_HEADS.map((head) => (
-                            <th key={head} className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
+                        {Object.entries(TABLE_HEADS).map((head, index) => (
+                            <th key={index} className={`border-b border-blue-gray-100 bg-blue-gray-50 p-4 ${head[1]}`}>
                                 <Typography
                                     variant="small"
                                     color="blue-gray"
                                     className="font-normal leading-none opacity-70"
                                 >
-                                    {head}
+                                    {head[0]}
                                 </Typography>
                             </th>
                         ))}
@@ -243,51 +293,66 @@ const TableData = (props) => {
 
                         <PreviousPath previousPath={parentPath} />
                     }
-                    {props.data.map((file) => (
-                        <tr onContextMenuCapture={handleRightClick} key={file.name} className="even:bg-blue-gray-50/50 hover:bg-blue-gray-50 duration-[1.1s]" >
-                            <td>
-                                <Checkbox className='selectFile' onChange={handleChangeSelect} value={path.join(currentPath, file.name)} />
-                            </td>
-                            <td className='flex py-4'>
-                                <TableNameItem
-                                    fileInfo={file}
-                                    {...tableNameItemProps}
-                                />
-                            </td>
-                            <td>
-                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                    <Tooltip content="View Permissions">
-                                        <IconButton
-                                            variant="text"
-                                            onClick={
-                                                () => handleClick(file.name, file)
-                                            }
-                                            className="rounded-full h-10 w-10 bg-blue-gray-50" size='sm'>
-                                            <i className="fas fa-info" />
-                                        </IconButton>
-                                    </Tooltip>
-                                </Typography>
-                            </td>
-                            <td>
-                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                    {
-                                        file.type === 1 ? "Folder" : <GetSize intSize={file.size} />
-                                    }
-                                </Typography>
-                            </td>
-                            <td>
-                                <Typography variant="small" color="blue-gray" className="font-normal">
-                                    {dateTime(file.time)}
-                                </Typography>
-                            </td>
-                            <td>
-                                <div className="flex gap-3 ">
-                                    <RenameItem fileName={file.name} setRenameElement={setRenameElement} />
-                                    <DeleteItem fileName={file.name} type={file.type} />
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
+                    {props.data.map((file, index) => {
+                        const filePathName = path.join(currentPath, file.name)
+                        const isSelected = Object.keys(deleteContext.items).includes(filePathName);
+
+                        return (
+                            <tr
+                                onContextMenuCapture={(event) => handleRightClick(event, file)}
+                                key={index}
+                                className={`relative even:bg-blue-gray-50/50 hover:bg-blue-gray-50 ${isSelected ? "bg-gradient-to-l from-base-300 to-blue-gray-50" : "duration-[0.5s]"}`}
+                            >
+                                {/* {console.log()} */}
+                                <td>
+                                    <Checkbox className='selectFile' onChange={handleChangeSelect} value={filePathName} />
+                                </td>
+                                <td className='flex py-4' onClick={() => handleClickToSelect(filePathName, index)}>
+                                    <TableNameItem
+                                        fileInfo={file}
+                                        {...tableNameItemProps}
+                                    />
+                                </td>
+                                <td className='sm:table-cell hidden'>
+                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                        <Tooltip content="View Permissions">
+                                            <IconButton
+                                                variant="text"
+                                                onClick={
+                                                    () => handleClick(file.name, file)
+                                                }
+                                                className="rounded-full h-10 w-10 bg-blue-gray-50" size='sm'>
+                                                <i className="fas fa-info" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Typography>
+                                </td>
+                                <td className='sm:table-cell hidden'>
+                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                        {
+                                            file.type === 1 ? "Folder" : getSize(file.size)
+                                        }
+                                    </Typography>
+                                </td>
+                                <td className='sm:table-cell hidden'>
+                                    <Typography variant="small" color="blue-gray" className="font-normal">
+                                        {dateTime(file.time)}
+                                    </Typography>
+                                </td>
+                                <td>
+                                    <div className="flex gap-3 ">
+                                        <RenameItem fileName={file.name} setRenameElement={setRenameElement} />
+                                        <DeleteItem fileName={file.name} type={file.type} />
+
+                                        {file.type !== 1 && (
+                                            <DownloadItem fileName={file.name} />
+                                        )}
+
+                                    </div>
+                                </td>
+                            </tr>
+                        )
+                    })}
                 </tbody>
             </table >
 
@@ -302,7 +367,7 @@ const TableData = (props) => {
                     />
                 )
             }
-        </div>
+        </>
     );
 };
 

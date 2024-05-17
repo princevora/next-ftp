@@ -4,6 +4,8 @@ import SidebarSkeleton from "./skeletons/sidebar-skeleton";
 import { useFtpDetailsContext } from "@/context/ftp-details-context";
 import { findAndCheckOrSetValue, findValueByObjectPath } from "@/helper";
 import React from "react";
+import * as pathModule from "path";
+import { Typography } from "@material-tailwind/react";
 
 function FolderOpenIcon() {
     return <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -17,7 +19,12 @@ function FolderIconClose() {
     </svg>
 }
 
-function renderNestedDetails(obj, firstKey = null, innerPaths = null) {
+function handleChangePath(path, fileName) {
+    const event = new CustomEvent("path:change", { detail: { path, name: fileName } });
+    window.dispatchEvent(event);
+}
+
+function renderNestedDetails(obj, firstKey = null, innerPaths = null, path = "/") {
     if (firstKey !== null) {
         obj = obj[firstKey];
     }
@@ -26,16 +33,19 @@ function renderNestedDetails(obj, firstKey = null, innerPaths = null) {
         <ul>
             {Object.entries(obj).map(([key, value]) => {
                 const isOpen = innerPaths[innerPaths.length - 1] === key || innerPaths.includes(key);
+                const navigatorPath = pathModule.join(path, key);
 
                 return (
                     <li key={key}>
                         <details open={isOpen}>
-                            <summary>
-                                {isOpen ? <FolderOpenIcon /> : <FolderIconClose />}
-                                {key}
+                            <summary >
+                                <span onClick={() => handleChangePath(navigatorPath, key)} d-k={navigatorPath} className="flex gap-1">
+                                    {isOpen ? <FolderOpenIcon /> : <FolderIconClose />}
+                                    {key}
+                                </span>
                             </summary>
                             {typeof value === "object" && Object.keys(value).length > 0 && (
-                                renderNestedDetails(value, null ,innerPaths)
+                                renderNestedDetails(value, null, innerPaths, navigatorPath, key)
                             )}
                         </details>
                     </li>
@@ -67,14 +77,18 @@ export default function Paths() {
                                     const innerPathsLen = innerPaths.length;
                                     const isOpen = file.name == innerPaths[1];
 
-                                    return file.type === 1 && (
+                                    return file.type === 1  && (
                                         <li key={key}>
                                             <details open={isOpen ? innerPathsLen == 1 || innerPathsLen >= 1 : false}>
-                                                <summary>
-                                                    {isOpen ? <FolderOpenIcon /> : <FolderIconClose />}
-                                                    {file.name}
+                                                <summary className="cursor-pointer">
+                                                    <span onClick={() => handleChangePath(pathModule.join('/', file.name))} className="flex gap-1">
+                                                        {isOpen ? <FolderOpenIcon /> : <FolderIconClose />}
+                                                        {file.name}
+                                                    </span>
                                                 </summary>
-                                                {file.name == innerPaths[1] && sidebar.currentRoots !== null && renderNestedDetails(sidebar.currentRoots, Object.keys(sidebar.currentRoots)[0], innerPaths)}
+                                                {/* {console.log()} */}
+                                                {/* {file.name == innerPaths[1] && sidebar.currentRoots !== null && console.log(sidebar.currentRoots[innerPaths[1]],sidebar.currentRoots, innerPaths[1])} */}
+                                                {file.name == innerPaths[1] && sidebar.currentRoots !== null && typeof sidebar.currentRoots[innerPaths[1]] !== "undefined" && renderNestedDetails(sidebar.currentRoots, Object.keys(sidebar.currentRoots)[0], innerPaths, file.name)}
                                             </details>
                                         </li>
                                     )

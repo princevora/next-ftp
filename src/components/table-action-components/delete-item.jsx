@@ -10,7 +10,7 @@ import path from "path";
 import toast from "react-hot-toast";
 import { useConfirmationContext } from "@/context/confirmation";
 
-export default function DeleteItem({ fileName, type }) {
+export default function DeleteItem({ fileName, type, className = "" }) {
 
     const ftpContext = useFtpDetailsContext().state;
     const confirmationContext = useConfirmationContext();
@@ -56,7 +56,7 @@ export default function DeleteItem({ fileName, type }) {
             toast.promise(
                 response,
                 {
-                    loading: `Deleting The File ${name}`,
+                    loading: `Deleting The File ${fileName}`,
                     success: (rsp) => rsp,
                     error: (err) => err
                 }
@@ -92,7 +92,7 @@ export default function DeleteItem({ fileName, type }) {
     }
 
     return (
-        <Typography as="a" href="#" variant="small" color="current" className="font-medium">
+        <Typography as="a" href="#" variant="small" color="blue-gray" className={`font-medium ${className}`}>
             <Tooltip content={`Delete: ${fileName}`}>
                 <TrashIcon
                     onClick={handleClick}

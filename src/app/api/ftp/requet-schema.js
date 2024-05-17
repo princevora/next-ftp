@@ -33,6 +33,12 @@ export const getFileSchema = z.object({
     path: z.string()
 })
 
+export const copyFileSchema = z.object({
+    ...mainParmas,
+    from: z.string(),
+    to: z.string()
+})
+
 // Special schema for validating formdata / multipart
 export const uploadSchema = zfd.formData({
     host: zfd.text(),

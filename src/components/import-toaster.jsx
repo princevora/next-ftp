@@ -26,7 +26,9 @@ export default function ImportHotToast() {
                         primary: 'green',
                         secondary: 'black',
                     },
-                },
+                }, loading: {
+                    duration: Infinity
+                }
             }}
         />
     )

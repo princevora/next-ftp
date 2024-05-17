@@ -11,9 +11,6 @@ export const setFtpConfig = (data, filePath) => {
     user = data.user;
     pass = data.pass;
     path = filePath;
-    // ftp.get("/", (err, socket) => {
-    //     socket.stre
-    // })
 }
 
 export const connectLogin = () => new Promise(async (resolve, reject) => {
@@ -248,33 +245,61 @@ export const createItem = ({ type, name }) => new Promise(async (resolve, reject
     }
 })
 
-export const getFile = async ({ path }) => {
-    return new Promise((resolve, reject) => {
-        let blob;
+export const getFile = (path) => new Promise(async (resolve, reject) => {
+    return await ftp.get(path, (err, socket) => {
+        if (err) {
+            reject(sendObjRes(err.message, err.code, true));
+        }
 
-        ftp.get(path, (err, socket) => {
-            if (err) {
-                console.error("Error:", err);
-                reject(err);
+        const chunks = [];
+        socket.on('data', chunk => {
+            chunks.push(chunk);
+        });
+        socket.on('close', () => {
+            resolve(chunks)
+        });
+
+        socket.resume();
+    });
+});
+
+export const downloadFile = ({ path }) => new Promise(async (resolve, reject) => {
+    let blob;
+
+    await getFile(path)
+        .then((chunks) => {
+            const { base } = pathModule.parse(path);
+            const mimeType = mime.lookup(base) || 'application/octet-stream';
+
+            const fileContent = Buffer.concat(chunks);
+            blob = new Blob([fileContent], { type: mimeType });
+
+            const headers = {
+                "Content-type": mimeType,
+                "Content-Disposition": `attachment; filename="${base}"`
             }
 
-            const chunks = [];
-            socket.on('data', chunk => {
-                chunks.push(chunk);
-            });
-            socket.on('close', () => {
-                const { base } = pathModule.parse(path);
-                const mimeType = mime.lookup(base) || 'application/octet-stream';
+            resolve({ success: true, blob, headers, status: 200 });
+        })
+        .catch((err) => reject(err));
 
-                const fileContent = Buffer.concat(chunks);
-                blob = new Blob([fileContent], { type: mimeType });
-                resolve({ success: true, isBlob: true, blob: blob, isDownloadable: true });
-            });
+})
 
-            socket.resume();
-        });
-    });
-};
+// Pending function...
+export const copy = ({ from, to }) => new Promise(async (resolve, reject) => {
+    await getFile(from)
+    .then((chunks) => {
+        const basename = pathModule.parse(from).name;
+        let new_file_name = from.replace(basename, basename + " - Copy");
+        const buffer = Buffer.concat(chunks);
+
+        ftp.put(buffer, new_file_name, (err) => {
+            if(err) console.log(err);
+            else{console.log("Done, ");}
+        })
+    })
+    .catch((err) => reject(err));
+})
 
 export const renameFile = async ({ from, to }) => {
 

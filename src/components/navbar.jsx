@@ -11,6 +11,7 @@ import {
   Bars3Icon,
 } from "@heroicons/react/24/solid";
 import SearchPath from "@/components/tableDataHeader/search-path";
+import RefreshFiles from "@/components/tableDataHeader/refresh-files";
 import CreateItem from "@/components/tableDataHeader/create-item";
 import DeleteSelected from "@/components/tableDataHeader/delete-selected";
 import UploadItems from "./tableDataHeader/upload-items";
@@ -56,6 +57,7 @@ export function Navbar() {
         <div className=" sm:w-auto flex justify-end sm:justify-start items-center mt-2 sm:mt-0">
           <div className="flex items-center gap-2 border-gray-200 px-2 flex-wrap">
             <DeleteSelected />
+            <RefreshFiles />
             <UploadItems />
             <CreateItem />
             <SearchPath />

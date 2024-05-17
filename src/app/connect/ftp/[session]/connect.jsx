@@ -63,21 +63,12 @@ function Connect({ params }) {
     };;
 
     useEffect(() => {
-        const obj = {
-            has: {
-                folder: {
-                    prince: {
-                        isVisible: true,
-                        isfren: true,
-                        std: 11
-                    }
-                }
-            }
-        }
-
         const handleFetchFiles = (data) => {
-            const path = data?.detail?.path || '/';
-            loadFiles(path);
+            const detail = data?.detail;
+            const path = detail?.path || '/';
+            const ignoreRootsUpdate = detail?.ignoreRootsUpdate || false;
+
+            loadFiles(path, ignoreRootsUpdate);
         }
 
         // Load Files when the files:fetch event is triggered.
@@ -102,10 +93,23 @@ function Connect({ params }) {
 
     }, [state.ftp_path]);
 
-    const loadFiles = async (path) => {
+    const loadFiles = async (path, ignoreRootsUpdate = false) => {
+
+        // empty the selected items for for delete items component
+        deleteContext.setItems([]);
+
+        const filePath = path || state.ftp_path
+
+        setState(prevState => (
+            {
+                ...prevState,
+                is_table_hidden: true,
+                ftp_path: filePath
+            })
+        );
 
         // Show Toaster and load the files too.
-        const response = fetchFileData(path || state.ftp_path);
+        const response = fetchFileData(filePath, ignoreRootsUpdate);
 
         await toast.promise(
             response,
@@ -129,9 +133,19 @@ function Connect({ params }) {
 
     }
 
-    const fetchFileData = (path = "/") => new Promise(async (resolve, reject) => {
+    /**
+     * 
+     * This is Main function to load the files and folder of a perticular path
+     * 
+     * @param {string} path 
+     * @param {string} ignoreRootsUpdate 
+     * 
+     * @returns {Promise}
+     */
+    const fetchFileData = (path = "/", ignoreRootsUpdate = false) => new Promise(async (resolve, reject) => {
         let isRootReq = false; //Check wether the path is empty and then set this to true. so we can set the root folders for sidebar. 
 
+        // Check if the path is empty so set it to "/"
         if (path === "") {
             path = "/";
         }
@@ -140,21 +154,13 @@ function Connect({ params }) {
             isRootReq = true;
         }
 
-        // empty the selected items for for delete items component
-        deleteContext.setItems([]);
-
-        setState(prevState => (
-            {
-                ...prevState,
-                is_table_hidden: true,
-                ftp_path: path
-            })
-        );
-
+        // Create a Unique object using spread.
         const paramData = { ...ftpParams };
+        // Asign its Values.
         paramData.path = path
 
         try {
+            // Create a fetch request
             const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: {
@@ -163,13 +169,16 @@ function Connect({ params }) {
                 body: JSON.stringify(paramData),
             });
 
+            // fetch the json response
             const responseData = await response.json();
 
+            // check if the response is failed so send the message.
             if (!response.ok) {
                 const { message } = responseData.data;
                 reject(message);
             }
 
+            // Get sorted files and folder names by its type 
             const sorted = Object.values(responseData.data.ftp_files).sort((a, b) => {
                 return b.type - a.type;
             });
@@ -177,40 +186,60 @@ function Connect({ params }) {
             // Set the root folder if its the root path.
             isRootReq && sidebar.roots == null && sidebar.setRoots(sorted);
 
-            const currentPath = ftpDetailsContext.state.currentPath;
+            let currentRootsPath = null;
 
             // Set the current Path Roots. if the path isnt root path.
-            const lastParse = pathModule.parse(currentPath);
             const crParse = pathModule.parse(path)
             const crBase = crParse.base; //Current Path basename
-            const lrBase = lastParse.base; //Last Path basename
-            const dirs = sorted.filter((dir) => { return dir.type == 1 });
+
+            // Filter the sorted files to get only the dirs.
+            const dirs = sorted.filter((dir) => { return dir.type == 1 }); 
+            
+            // Get currentRoots state from sidebar Context.
+            
             const { currentRoots } = sidebar
-            let currentRootsPath = null;
             // Get the index of the current Basename (path).
             const indexs = path.split("/").filter((p) => { return p !== '' });
-            const solidObjectPath = indexs.join(".");
-            let currentValidPath;
+1
+            /**
+             * Below code can be used in some conditions to prevent bugs..Currently not in use.
+             * 
+             * let currentValidPath;
+             * 
+             * findAndCheckOrSetValue(currentRoots, indexs[indexs.length - 1], (v, p) => {
+             *   if (p !== null) {
+             *       currentValidPath = p.split(".").shift();
+             *   }
+             * }, []);
+             * 
+             * && currentValidPath == indexs[0] 
+             * 
+             */
 
-            findAndCheckOrSetValue(currentRoots, indexs[indexs.length - 1], (v, p) => {
-                if (p !== null) {
-                    currentValidPath = p.split(".").shift();
-                }
-            }, []);
-
-            if (!isRootReq && currentRoots !== null && dirs.length >= 1 && currentValidPath == indexs[0]) {
+            if (!isRootReq && currentRoots !== null && dirs.length >= 1 && !ignoreRootsUpdate) {
                 const newKeys = {};
+                
+                // Push every dir name to newKeys
                 dirs.forEach(dir => {
                     newKeys[dir.name] = {}
                 });
 
-                findAndCheckOrSetValue(currentRoots, indexs[indexs.length - 1], (v, p) => {
-                    if (p !== null) {
-                        currentRootsPath = p;
-                    }
-                }, [], newKeys);
+                // Create a duplicate of the currentRoots
+                const current_roots = {...currentRoots};
+
+                /** 
+                 * The following helper function will helpful for changing child key's values recursively 
+                 * */ 
+                findAndCheckOrSetValue(current_roots, indexs[indexs.length - 1], (v, p) => {
+                    /**
+                     * our object's child values are changed
+                     * now just update the context's state.
+                     */
+
+                    sidebar.setCurrentRoots(current_roots);
+                }, [], newKeys); //Get the value and object path 
             }
-            else if (!isRootReq && dirs.length >= 1) {
+            else if (!isRootReq && dirs.length >= 1 && !ignoreRootsUpdate) {
                 const roots = {}
 
                 dirs.forEach(dir => {
@@ -223,34 +252,9 @@ function Connect({ params }) {
                 sidebar.setCurrentRoots(roots)
             }
 
-            // if (!isRootReq && crParse.dir.indexOf(lastParse.base) !== -1 && lastParse.base !== "") {
-
-            //     // console.log("Roots: ", sidebar.currentRoots, "bse:", crBase);
-
-            //     // if(findAndCheckOrSetValue(sidebar.currentRoots, crBase) !== undefined){
-            //     //     console.log("If: ", findAndCheckOrSetValue(sidebar.currentRoots, crBase));
-            //     //     findAndCheckOrSetValue(sidebar.currentRoots, crBase, {
-            //     //         [crBase]: sorted
-            //     //     })
-            //     // }else{
-            //     //     findAndCheckOrSetValue(sidebar.currentRoots, crBase, {
-            //     //         [crBase]: sorted
-            //     //     })
-            //     // };
-            //     // const newItem = sidebar.currentRoots.includes(crBase) ? curre
-
-            //     // const newItem = sidebar.currentRoots[{
-            //     //     [pathModule.basename(crParse)]: 
-            //     // }]
-            //     sidebar.setCurrentRoots(sorted);
-            // }
-            // else if (!isRootReq) {
-            //     sidebar.setCurrentRoots(sorted);
-            // }
-
             ftpDetailsContext.setState(prev => ({
                 ...prev,
-                currentPath: path
+                currentPath: path,
             }));
 
             resolve(sorted)
@@ -270,13 +274,19 @@ function Connect({ params }) {
     })
 
     const handePath = (folderPath) => {
+        // Join the state path with the recived path..
         let followingPath = pathModule.join(state.ftp_path, folderPath);
+        
+        // Set the path in search context
         searchContext.setState(followingPath);
+
+        // Also sset the path in ftp context.
         ftpDetailsContext.setState(prev => ({
             ...prev,
             currentPath: folderPath
         }))
 
+        // Set the path in current Component State
         setState(prevState => (
             {
                 ...prevState,
@@ -284,18 +294,27 @@ function Connect({ params }) {
             })
         );
 
+        // Load the files
         loadFiles(followingPath)
     };
 
+    /**
+     * 
+     * @param {string} from 
+     * @param {string} to 
+     * @returns {void}
+     */
     const renameFile = (from, to) => new Promise(async (resolve, reject) => {
-        const toDomain = to.split(".").pop();
-
+        // Create a paramdata object from ftp params.
         const paramData = { ...ftpParams };
+
+        // ReAsign their Values
         paramData.action = "rename";
         paramData.from = from;
         paramData.to = to;
 
         try {
+            // Create A Fetch req.
             const response = await fetch(apiEndpoint, {
                 method: "POST",
                 headers: {
@@ -304,18 +323,23 @@ function Connect({ params }) {
                 body: JSON.stringify(paramData)
             })
 
+            // Fetch json response
             const data = await response.json();
 
+            // CHeck if the request is success
             if (!response.ok) {
+                // throw the error
                 throw new Error("Unable To Rename the file.");
             }
 
+            // Resolve The recived Response.
             resolve({
                 data,
                 success: true
             });
 
-        } catch (error) {
+        } catch (error) { //Catch error
+            // Return reject the error
             reject({
                 data: error,
                 success: false
@@ -334,12 +358,19 @@ function Connect({ params }) {
         const { from, to } = context;
         let inputField;
 
+        // Get Basename of source Path
         const fromBaseName = pathModule.basename(from);
+        // Get domain
         const domain = to.split(".").pop();
+        // Create the domain to lowercase.
         const lDomain = domain.toLowerCase();
+        // Normalize the domain 
         const normalizedtoBaseName = to.replace(domain, lDomain); //This lines will change the UpperCase Domain names to lowercase.
+
+        // Get destination Basename.
         const toBaseName = pathModule.basename(normalizedtoBaseName);
 
+        // Return error if the toBaseName is empty.
         if (toBaseName === "") {
             return toast.error("The File Name Must not be empty");
         }
@@ -347,6 +378,7 @@ function Connect({ params }) {
         inputField = renameInputRef.current.querySelector("input")
         inputField.disabled = true;
 
+        // Create a toast promise.
         toast.promise(
             renameFile(from, normalizedtoBaseName),
             {

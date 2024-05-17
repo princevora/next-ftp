@@ -5,34 +5,47 @@ import {
     MenuList,
     MenuItem,
     Button,
+    Card,
+    Typography,
+    Tooltip,
 } from "@material-tailwind/react";
+import DeleteItem from "./table-action-components/delete-item";
+import RenameItem from "./table-action-components/rename-item";
+import { useEffect } from "react";
+import { ArrowDownTrayIcon } from "@heroicons/react/24/solid";
+import DownloadItem from "./table-action-components/download-item";
 
 export default function ContextMenu() {
     const context = useContextMenu();
 
+    const setRenameElement = () => {
+        const event = new CustomEvent("set:rename_ele", {
+            detail: {
+                file_name: context.element?.name,
+            }
+        });
+
+        context.setIsVisible(false);
+        window.dispatchEvent(event);
+    }
+
     return (
-        context.isVisible &&
-        <div className="absolute z-20" style={{ top: `${context.position.y}px`, left: `${context.position.x}px`}}>
-            <ul className="menu bg-base-200 w-56 rounded-box">
-                <li>
-                    <a>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                        Item 2
-                    </a>
+        context.isVisible && context.element &&
+        <Card className="absolute z-20 w-72" style={{ top: `${context.position.y}px`, left: `${context.position.x}px` }}>
+            <ul>
+                <li className="p-3 flex gap-1 cursor-pointer hover:bg-base-200 hover:rounded-md">
+                    <RenameItem className="py-1 px-1" fileName={context.element.name} setRenameElement={setRenameElement} />
+                    Rename
                 </li>
-                <li>
-                    <a>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        Item 1
-                    </a>
+                <li className="p-3 flex gap-1 cursor-pointer hover:bg-base-200 hover:rounded-md">
+                    <DeleteItem className="py-1 px-1" fileName={context.element.name} type={context.element.type} />
+                    Delete
                 </li>
-                <li>
-                    <a>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                        Item 3
-                    </a>
+                <li className="p-3 flex gap-2 cursor-pointer hover:bg-base-200 hover:rounded-md">
+                    <DownloadItem fileName={context.element.name} />
+                    Download
                 </li>
             </ul>
-        </div>
+        </Card>
     );
 }

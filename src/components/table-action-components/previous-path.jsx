@@ -10,7 +10,8 @@ function PreviousPath({ previousPath }) {
     const handleClick = () => {
         const event = new CustomEvent("files:fetch", {
             detail: {
-                path: previousPath
+                path: previousPath,
+                ignoreRootsUpdate: true
             }
         });
         
