@@ -195,43 +195,36 @@ function Connect({ params }) {
             const crBase = crParse.base; //Current Path basename
 
             // Filter the sorted files to get only the dirs.
-            const dirs = sorted.filter((dir) => { return dir.type == 1 }); 
-            
+            const dirs = sorted.filter((dir) => { return dir.type == 1 });
+
             // Get currentRoots state from sidebar Context.
-            
+
             const { currentRoots } = sidebar
             // Get the index of the current Basename (path).
             const indexs = path.split("/").filter((p) => { return p !== '' });
-1
-            /**
-             * Below code can be used in some conditions to prevent bugs..Currently not in use.
-             * 
-             * let currentValidPath;
-             * 
-             * findAndCheckOrSetValue(currentRoots, indexs[indexs.length - 1], (v, p) => {
-             *   if (p !== null) {
-             *       currentValidPath = p.split(".").shift();
-             *   }
-             * }, []);
-             * 
-             * && currentValidPath == indexs[0] 
-             * 
-             */
 
-            if (!isRootReq && currentRoots !== null && dirs.length >= 1 && !ignoreRootsUpdate) {
+            let currentValidPath;
+
+            findAndCheckOrSetValue(currentRoots, indexs[indexs.length - 1], (v, p) => {
+                if (p !== null) {
+                    currentValidPath = p.split(".").shift();
+                }
+            }, []);
+
+            if (!isRootReq && currentRoots !== null && dirs.length >= 1 && !ignoreRootsUpdate && currentValidPath == indexs[0]) {
                 const newKeys = {};
-                
+
                 // Push every dir name to newKeys
                 dirs.forEach(dir => {
                     newKeys[dir.name] = {}
                 });
 
                 // Create a duplicate of the currentRoots
-                const current_roots = {...currentRoots};
+                const current_roots = { ...currentRoots };
 
                 /** 
                  * The following helper function will helpful for changing child key's values recursively 
-                 * */ 
+                 * */
                 findAndCheckOrSetValue(current_roots, indexs[indexs.length - 1], (v, p) => {
                     /**
                      * our object's child values are changed
@@ -278,7 +271,7 @@ function Connect({ params }) {
     const handePath = (folderPath) => {
         // Join the state path with the recived path..
         let followingPath = pathModule.join(state.ftp_path, folderPath);
-        
+
         // Set the path in search context
         searchContext.setState(followingPath);
 
