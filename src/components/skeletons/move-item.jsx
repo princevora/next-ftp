@@ -6,7 +6,7 @@ import SearchPathSkeleton from "@/components/skeletons/search-path-skeleton";
 import { useEffect, useState } from 'react';
 
 
-export default function TableSkeleton() {
+export default function MoveItemSkeleton() {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -36,9 +36,12 @@ export default function TableSkeleton() {
 function Row({ isClient }) {
     return (
         <tr>
-            <td className='grid md:grid-cols-[6%_auto] sm:grid-cols-1 px-3 py-1'>
-                <Skeleton containerClassName='mt-2 mx-2' height={30} width={30} />
-                <Skeleton height={42} />
+            <td className=' px-3 py-1'>
+                {/* {isClient && typeof window !== 'undefined' && window.innerWidth > 768 && (
+                    <> */}
+                        <Skeleton height={42} />
+                    {/* </> */}
+                {/* )} */}
             </td>
 
         </tr>

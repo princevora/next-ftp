@@ -1,23 +1,29 @@
 import { Typography, Input, input } from "@material-tailwind/react";
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { RenameItemContext } from "../context/RenameItemContext";
 import ItemIcon from "./item-icons";
 import path from "path";
-import { useSearchPathContext } from "@/context/search-path";
 import { useFtpDetailsContext } from "@/context/ftp-details-context";
+import Link from "next/link";
+import { useRefcontext } from "@/context/ref";
+import { useRouter } from "next/navigation";
+import { isMediaFile } from "@/helper";
 
 const TableNameItem = (props) => {
     const context = useContext(RenameItemContext);
     const searchContext = useFtpDetailsContext(); //will be used to get the current path. 
     const currentPath = searchContext.state.currentPath;
+    const currentFilePath = path.join(currentPath, props.fileInfo.name);
+    const ref = useRefcontext();
+    let redirectURL = window?.location?.pathname;
 
     const handleChange = (e) => {
         const fromPath = path.join(currentPath, props.fileInfo.name);
         const inputValue = e.target.value;
         let toPath = "";
 
-        if(inputValue !== ""){
-            toPath  = path.join(currentPath, e.target.value);
+        if (inputValue !== "") {
+            toPath = path.join(currentPath, e.target.value);
         }
 
         context.setItemName(fromPath, toPath);
@@ -27,7 +33,7 @@ const TableNameItem = (props) => {
         return (
             <form onSubmit={props.handleSubmitRename}>
                 <Input
-                    ref={props.renameInputRef}
+                    ref={ref}
                     onChange={handleChange}
                     label={`Name for ${currentName.length > 15 ? currentName.substring(0, 15) + "..." : currentName}`}
                 />
@@ -38,26 +44,44 @@ const TableNameItem = (props) => {
     const nameWithLink = (name, type) => {
         return (
             <>
-                <ItemIcon fileName={name} fileType={type}/>
+                <ItemIcon fileName={name} fileType={type} />
                 <Typography variant="small" color="blue-gray" className="font-normal px-2">
-                    <a href='#' onClick={(e) => {
+                    <Link href='#' onClick={(e) => {
                         e.preventDefault();
 
                         props.handleChangePath(name)
                     }}>
                         {printName(name)}
-                    </a>
+                    </Link>
                 </Typography>
             </>
         );
     };
 
     const name = (name, type) => {
+        const isMedia = isMediaFile(name);
+
+        const previewHref = isMedia && {
+            pathname: redirectURL + "/preview",
+            query: {
+                path: currentFilePath
+            }
+        };
+        
+        const editHref = !isMedia && {
+            pathname: redirectURL + "/edit",
+            query: {
+                path: currentFilePath
+            }
+        }
+
         return (
             <>
                 <ItemIcon fileName={name} fileType={type} />
-                <Typography variant="small" as="a" color="blue-gray" className="font-normal px-2">
-                    {printName(name)}
+                <Typography variant="small" color="blue-gray" className="font-normal px-2">
+                    <Link href={isMedia ? previewHref : editHref} prefetch shallow>
+                        {printName(name)}
+                    </Link>
                 </Typography>
             </>
         );

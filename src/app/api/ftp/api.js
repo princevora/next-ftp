@@ -2,6 +2,7 @@ import { File } from "buffer";
 import jsftp from "jsftp";
 import * as pathModule from "path"
 import mime from "mime-types";
+import { PassThrough } from "stream";
 
 let ftp, user, pass, path;
 // Create a JsFTP config
@@ -246,59 +247,72 @@ export const createItem = ({ type, name }) => new Promise(async (resolve, reject
 })
 
 export const getFile = (path) => new Promise(async (resolve, reject) => {
-    return await ftp.get(path, (err, socket) => {
+    ftp.get(path, (err, socket) => {
         if (err) {
             reject(sendObjRes(err.message, err.code, true));
         }
 
-        const chunks = [];
-        socket.on('data', chunk => {
-            chunks.push(chunk);
-        });
-        socket.on('close', () => {
-            resolve(chunks)
-        });
+        const stream = new PassThrough();
+        socket.pipe(stream);
 
-        socket.resume();
+        // socket.on("error", () => {
+        //     reject(sendObjRes("Can't resolve Stream, Unable to download file."));
+        // })
+
+        // let chunks = [];
+
+        // socket.on("data", (buffer) => {
+        //     chunks.push(buffer);
+        // })
+
+        // socket.on("close", () => {
+        //     console.log("Lem: ", chunks.length);
+
+        // })
+        resolve(stream);
+
     });
 });
 
 export const downloadFile = ({ path }) => new Promise(async (resolve, reject) => {
-    let blob;
+    try {
+        
+        //Get file Size.
+        await checkExists(path)
+        .then(async (fileSize) => {
+                let size = fileSize;
+                const { base } = pathModule.parse(path);
+                const mimeType = mime.lookup(base) || 'application/octet-stream';
 
-    await getFile(path)
-        .then((chunks) => {
-            const { base } = pathModule.parse(path);
-            const mimeType = mime.lookup(base) || 'application/octet-stream';
+                const headers = {
+                    "File-Size": size,
+                    "Content-type": mimeType,
+                    "Content-Disposition": `attachment; filename="${base}"`
+                }
 
-            const fileContent = Buffer.concat(chunks);
-            blob = new Blob([fileContent], { type: mimeType });
+                await getFile(path)
+                .then((stream) => resolve({ success: true, stream, headers, status: 200 }))
+            });
 
-            const headers = {
-                "Content-type": mimeType,
-                "Content-Disposition": `attachment; filename="${base}"`
-            }
 
-            resolve({ success: true, blob, headers, status: 200 });
-        })
-        .catch((err) => reject(err));
-
+    } catch (error) {
+        reject(error)
+    }
 })
 
-// Pending function...
-export const copy = ({ from, to }) => new Promise(async (resolve, reject) => {
-    await getFile(from)
-    .then((chunks) => {
-        const basename = pathModule.parse(from).name;
-        let new_file_name = from.replace(basename, basename + " - Copy");
-        const buffer = Buffer.concat(chunks);
+export const move = ({ from, to }) => new Promise(async (resolve, reject) => {
+    const promises = [];
 
-        ftp.put(buffer, new_file_name, (err) => {
-            if(err) console.log(err);
-            else{console.log("Done, ");}
-        })
-    })
-    .catch((err) => reject(err));
+    for (const filePath in from) {
+        const basename = pathModule.basename(filePath);
+        const toPath = pathModule.join(to, basename).replaceAll("\\", "/");
+
+        promises.push(renameFtpFile(filePath, toPath));
+    }
+
+    Promise.all(promises)
+        .then(() => resolve(sendObjRes(`The file(s) or Folder(s) Has been Moved Successfully to ${to || "/"}`, 200)))
+        .catch(() => reject(sendObjRes("Unable to Move the file", 550, true)))
 })
 
 export const renameFile = async ({ from, to }) => {

@@ -1,22 +1,23 @@
+import path from "path";
+
 interface CallbackFunction {
     (value: any, path: any): { value: any, path: any };
 }
 
 export function findAndCheckOrSetValue(
-    obj: any, 
-    key: string, 
-    callback: CallbackFunction, 
+    obj: any,
+    key: string,
+    callback: CallbackFunction,
     paths: string[] = [],
     newValue: any = null
-): any 
-{
+): any {
     let result;
 
     for (let prop in obj) {
         if (obj.hasOwnProperty(prop)) {
             if (prop === key) {
                 const path = paths.join(".") + "." + prop;
-                if(newValue !== null){
+                if (newValue !== null) {
                     obj[prop] = newValue
                 }
 
@@ -28,7 +29,7 @@ export function findAndCheckOrSetValue(
                 // return callback
                 if (result !== undefined && prop == key) {
 
-                    if(newValue !== null){
+                    if (newValue !== null) {
                         obj[prop] = newValue;
                     }
 
@@ -41,12 +42,12 @@ export function findAndCheckOrSetValue(
     return callback(null, null);
 }
 
-export function findValueByObjectPath(object: object, obPath: string){
+export function findValueByObjectPath(object: object, obPath: string) {
     const paths = obPath.split(".");
     let value: any = object;
 
-    for(const path of paths){
-        if(value && typeof value === "object" && path in value){
+    for (const path of paths) {
+        if (value && typeof value === "object" && path in value) {
             value = value[path];
         } else {
             return null;
@@ -54,4 +55,39 @@ export function findValueByObjectPath(object: object, obPath: string){
     }
 
     return value;
+}
+
+export function getRootUrl(): string {
+    if (typeof window !== 'undefined') {
+        const { protocol, hostname, port } = window.location;
+        return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+    }
+    return '';
+};
+
+export const validExtensions: Record<string, number> = {
+    // Image type
+    "jpeg": 1,
+    "png": 1,
+    "jpg": 1,
+    "svg": 1,
+
+    // Video types
+    "mp4": 2,
+    "avi": 2,
+    "mov": 2,
+    "wmv": 2,
+
+    // Audio types
+    "mp3": 3,
+    "wav": 3,
+}
+
+/**
+ * @return {boolean}
+ */
+export function isMediaFile(fileName: string): boolean{
+    const ext: any = path.extname(fileName).split(".").pop();
+
+    return typeof validExtensions[ext] !== "undefined";
 }

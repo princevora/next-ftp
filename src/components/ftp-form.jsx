@@ -6,7 +6,7 @@ import {
     Button,
 } from "@material-tailwind/react";
 
-function FtpDataForm({handleChange, handleSubmit, formState}) {
+function FtpDataForm({ handleChange, handleSubmit, formState }) {
     return (
         <form onSubmit={handleSubmit}>
             <Card className="w-96 shadow-2xl mt-4">
@@ -38,7 +38,13 @@ function FtpDataForm({handleChange, handleSubmit, formState}) {
                     />
                 </CardBody>
                 <CardFooter className="pt-3">
-                    <Button type="submit" variant="gradient" fullWidth>
+                    {/* {console.log(formState.isSubmitted.toString())} */}
+                    <Button type="submit" variant="gradient" fullWidth className="flex gap-2 justify-center" disabled={formState.isSubmitted}>
+                        {
+                            formState.isSubmitted && 
+                            <span className="loading loading-xs loading-spinner"></span>
+                        }
+
                         Connect
                     </Button>
                 </CardFooter>

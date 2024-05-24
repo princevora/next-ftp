@@ -34,9 +34,9 @@ export const getFileSchema = z.object({
     path: z.string()
 })
 
-export const copyFileSchema = z.object({
+export const moveFileSchema = z.object({
     ...mainParmas,
-    from: z.string(),
+    from: z.record(z.number()),
     to: z.string()
 })
 

@@ -6,7 +6,7 @@ import { RenameItemContext } from "@/context/RenameItemContext";
 import { useFtpDetailsContext } from '@/context/ftp-details-context';
 import { usePasswordContext } from '@/context/encrypt-password';
 import { useSearchPathContext } from '@/context/search-path';
-import { useBulkDeleteContext } from '@/context/bulk-delete';
+import { useBulkSelectContext } from '@/context/bulk-select';
 import { useSideBarContext } from '@/context/sidebar';
 import { findAndCheckOrSetValue } from "@/helper";
 import Dialogs from "./modal-group/modals";
@@ -15,17 +15,18 @@ import TableSkeleton from "@/components/skeletons/table-skeleton";
 import TableData from "@/components/table-data";
 import toast from 'react-hot-toast';
 import CryptoJs from "crypto-js";
-import * as pathModule from 'path';
+import pathModule from 'path';
+import { useRefcontext } from '@/context/ref';
 
 function Connect({ params }) {
 
     const context = useContext(RenameItemContext);
     const rContext = useConfirmationContext() //Rename confirmation context
-    const renameInputRef = useRef(null);
+    const renameInputRef = useRefcontext();
     const ftpDetailsContext = useFtpDetailsContext();
     const password = usePasswordContext();
     const searchContext = useSearchPathContext();
-    const deleteContext = useBulkDeleteContext();
+    const deleteContext = useBulkSelectContext();
     const confirmation = useConfirmationContext();
     const sidebar = useSideBarContext();
 
@@ -250,6 +251,7 @@ function Connect({ params }) {
             ftpDetailsContext.setState(prev => ({
                 ...prev,
                 currentPath: path,
+                currentDirs: dirs
             }));
 
             resolve(sorted)
@@ -355,10 +357,11 @@ function Connect({ params }) {
 
         // Get Basename of source Path
         const fromBaseName = pathModule.basename(from);
-        // Get domain
-        const domain = to.split(".").pop();
-        // Create the domain to lowercase.
-        const lDomain = domain.toLowerCase();
+        // Get extension
+        const ext = to.split(".").pop();
+        
+        // Create the Get extension to lowercase.
+        const lExt = ext.toLowerCase();
         // Normalize the domain 
         const normalizedtoBaseName = to.replace(domain, lDomain); //This lines will change the UpperCase Domain names to lowercase.
 
@@ -411,7 +414,6 @@ function Connect({ params }) {
     }
 
     const tableDataProps = {
-        renameInputRef,
         handleSubmitRename,
         data: state.ftp_files,
         handleChangePath: handePath,

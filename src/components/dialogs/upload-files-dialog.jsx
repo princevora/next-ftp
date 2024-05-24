@@ -184,7 +184,7 @@ export default function UploadFilesDialog() {
             <Dialog
                 className="max-h-screen overflow-auto"
                 open={context.isVisible}
-                size="md"
+                size="sm"
                 handler={handleOpen}
             >
                 <DialogHeader className="justify-between">

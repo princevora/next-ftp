@@ -24,7 +24,7 @@ function handleChangePath(path, fileName) {
     window.dispatchEvent(event);
 }
 
-function renderNestedDetails(obj, firstKey = null, innerPaths = null, path = "/") {
+function renderNestedDetails(obj, firstKey = null, innerPaths = null, currentDirs) {
     if (firstKey !== null) {
         obj = obj[firstKey];
     }
@@ -33,19 +33,29 @@ function renderNestedDetails(obj, firstKey = null, innerPaths = null, path = "/"
         <ul>
             {Object.entries(obj).map(([key, value]) => {
                 const isOpen = innerPaths[innerPaths.length - 1] === key || innerPaths.includes(key);
-                const navigatorPath = pathModule.join(path, key);
+
+                /**
+                 *  we are using ignoreRootUpdates to prevent bugs and re establishing of the roots
+                 *  so suppose if user has moved a folder from currentpath may be user can refresh the files which will 
+                 * ignore the roots update, and this will print the previous roots, to prevent that we will hide check 
+                 *  if all the names are in roots.
+                 */
+                const nameFilter = currentDirs.filter(item => {
+                    const o = obj[key];
+                    return typeof o[item.name] !== "undefined"
+                });
 
                 return (
                     <li key={key}>
                         <details open={isOpen}>
                             <summary >
-                                <span onClick={() => handleChangePath(navigatorPath, key)} d-k={navigatorPath} className="flex gap-1">
+                                <span className="flex gap-1">
                                     {isOpen ? <FolderOpenIcon /> : <FolderIconClose />}
                                     {key}
                                 </span>
                             </summary>
-                            {typeof value === "object" && Object.keys(value).length > 0 && (
-                                renderNestedDetails(value, null, innerPaths, navigatorPath, key)
+                            {typeof value === "object" && Object.keys(value).length > 0 && typeof nameFilter !== undefined && (
+                                renderNestedDetails(value, null, innerPaths, currentDirs)
                             )}
                         </details>
                     </li>
@@ -77,7 +87,7 @@ export default function Paths() {
                                     const innerPathsLen = innerPaths.length;
                                     const isOpen = file.name == innerPaths[1];
 
-                                    return file.type === 1  && (
+                                    return file.type === 1 && (
                                         <li key={key}>
                                             <details open={isOpen ? innerPathsLen == 1 || innerPathsLen >= 1 : false}>
                                                 <summary className="cursor-pointer">
@@ -87,8 +97,7 @@ export default function Paths() {
                                                     </span>
                                                 </summary>
                                                 {/* {console.log()} */}
-                                                {/* {file.name == innerPaths[1] && sidebar.currentRoots !== null && console.log(sidebar.currentRoots[innerPaths[1]],sidebar.currentRoots, innerPaths[1])} */}
-                                                {file.name == innerPaths[1] && sidebar.currentRoots !== null && typeof sidebar.currentRoots[innerPaths[1]] !== "undefined" && renderNestedDetails(sidebar.currentRoots, Object.keys(sidebar.currentRoots)[0], innerPaths, file.name)}
+                                                {file.name == innerPaths[1] && sidebar.currentRoots !== null && typeof sidebar.currentRoots[innerPaths[1]] !== "undefined" && renderNestedDetails(sidebar.currentRoots, Object.keys(sidebar.currentRoots)[0], innerPaths, ftp.state.currentDirs)}
                                             </details>
                                         </li>
                                     )

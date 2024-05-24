@@ -1,5 +1,4 @@
-// components
-import { Navbar } from "@/components";
+"use client";
 
 // sections
 import FtpForm from "./ftp-form";

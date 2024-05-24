@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { Layout } from "@/components";
 import UseGlobalContext from "@/context/all-context-provider";
-import { ThemeProvider } from 'next-themes';
+import NextTopLoader from "nextjs-toploader";
 // import RenameItemContextProvider from "@/components/context/renameItem/RenameItemContext";
 // import { CollapseContextProivder } from "@/components/context/ftperrors-collapse/errors-collapse-context";
 
@@ -14,7 +14,10 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Online Ftp Solution",
+  title: {
+    default: "Online Ftp Solution",
+    template: "%s | Next-FTP"
+  },
   description:
     "Connect to your ftp server without downloading any softwares",
 };
@@ -37,6 +40,7 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/favicon.png" type="image/png" />
       </head>
       <body className={roboto.className}>
+        <NextTopLoader speed={500}/>
         <UseGlobalContext>
           <Layout>
             {children}

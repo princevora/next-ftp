@@ -5,14 +5,14 @@ import {
 import {
     TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useBulkDeleteContext } from "../../context/bulk-delete";
+import { useBulkSelectContext } from "../../context/bulk-select";
 import { useConfirmationContext } from "../../context/confirmation";
 import path from "path";
 import { useFtpDetailsContext } from "../../context/ftp-details-context";
 import toast from "react-hot-toast";
 
 function DeleteSelected() {
-    const context = useBulkDeleteContext();
+    const context = useBulkSelectContext();
     const confirmationContext = useConfirmationContext();
     const ftp = useFtpDetailsContext();
 
@@ -91,7 +91,12 @@ function DeleteSelected() {
     }
 
     return (
-        <Button variant="text" onClick={handleClick} disabled={context.isDisabled} className="text-xl p-2 font-medium bg-gray-200">
+        <Button
+            variant="text"
+            onClick={handleClick}
+            disabled={context.isDisabled}
+            className="text-xl p-2 font-medium bg-gray-200"
+        >
             <Typography as="a" href="#" variant="small" color="blue-gray" className="duration-700 rounded" >
                 <TrashIcon
                     height={15}

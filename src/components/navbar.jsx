@@ -15,10 +15,14 @@ import RefreshFiles from "@/components/tableDataHeader/refresh-files";
 import CreateItem from "@/components/tableDataHeader/create-item";
 import DeleteSelected from "@/components/tableDataHeader/delete-selected";
 import UploadItems from "./tableDataHeader/upload-items";
+import MoveItemsBulk from "./tableDataHeader/move-items";
+import PasteItem from "./tableDataHeader/paste-item";
 import { useSideBarContext } from "@/context/sidebar";
+import { useBulkSelectContext } from "@/context/bulk-select";
 
 export function Navbar() {
   const sideBarContext = useSideBarContext();
+  const selectContext = useBulkSelectContext();
   const open = sideBarContext.open;
 
   const handleOpen = () => sideBarContext.setOpen((prev) => !prev);
@@ -56,7 +60,13 @@ export function Navbar() {
         {/* Actions */}
         <div className=" sm:w-auto flex justify-end sm:justify-start items-center mt-2 sm:mt-0">
           <div className="flex items-center gap-2 border-gray-200 px-2 flex-wrap">
-            <DeleteSelected />
+            <DeleteSelected />{
+            console.log(selectContext.isItemsMoving , selectContext.movableItems)}
+            {selectContext.isItemsMoving && Object.keys(selectContext.movableItems).length !== 0 && (
+              <PasteItem />
+            )}
+            <MoveItemsBulk />
+            <span className="divider divider-horizontal divide-neutral"></span>
             <RefreshFiles />
             <UploadItems />
             <CreateItem />

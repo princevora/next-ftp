@@ -1,41 +1,47 @@
 "use client"
 
-import ErrorContextProvider from "./ftperrors-collapse/errors-collapse-context";
-import RenameItemContextProvider from "./RenameItemContext";
-import RenameConfirmationContextProvider from "./confirmation";
-import CreateItemContextProvider from "./create-item";
-import FtpDetailsContextProvider from "./ftp-details-context";
-import PasswordContextProvider from "./encrypt-password";
+import RenameContext from "./RenameItemContext";
+import RenameConfirmationContext from "./confirmation";
+import CreateItemContext from "./create-item";
+import FtpDetailContext from "./ftp-details-context";
+import PasswordContext from "./encrypt-password";
 import SearchPathContextProvider from "./search-path";
-import BulkDeleteContextProvider from "./bulk-delete";
-import SideBarContextProvider from "./sidebar";
-import UploadFileContextProvider from "./file-upload";
-import ContextMenuContextProvider from "./context-menu";
+import BulkSelectContext from "./bulk-select";
+import SidebarContext from "./sidebar";
+import UploadContext from "./file-upload";
+import ContextMenuContext from "./context-menu";
+import MoveItemContext from "./move-item";
+import RefContext from "./ref";
 
 const UseGlobalContext = ({ children }) => {
     return (
-        <FtpDetailsContextProvider>
-            <PasswordContextProvider>
-                <RenameItemContextProvider>
-                    <RenameConfirmationContextProvider>
-                        <SearchPathContextProvider>
-                            <CreateItemContextProvider>
-                                <BulkDeleteContextProvider>
-                                    <SideBarContextProvider>
-                                        <UploadFileContextProvider>
-                                            <ContextMenuContextProvider>
-                                                {children}
-                                            </ContextMenuContextProvider>
-                                        </UploadFileContextProvider>
-                                    </SideBarContextProvider>
-                                </BulkDeleteContextProvider>
-                            </CreateItemContextProvider>
-                        </SearchPathContextProvider>
-                    </RenameConfirmationContextProvider>
-                </RenameItemContextProvider>
-            </PasswordContextProvider>
-        </FtpDetailsContextProvider>
-    )
-}
+        <RefContext>
+            <UploadContext>
+                <MoveItemContext>
+                    <SidebarContext>
+                        <RenameContext>
+                            <PasswordContext>
+                                <CreateItemContext>
+                                    <BulkSelectContext>
+                                        <FtpDetailContext>
+                                            <ContextMenuContext>
+                                                <RenameConfirmationContext>
+                                                    <SearchPathContextProvider>
+                                                        {children}
+                                                    </SearchPathContextProvider>
+                                                </RenameConfirmationContext>
+                                            </ContextMenuContext>
+                                        </FtpDetailContext>
+                                    </BulkSelectContext>
+                                </CreateItemContext>
+                            </PasswordContext>
+                        </RenameContext>
+                    </SidebarContext>
+                </MoveItemContext>
+            </UploadContext>
+        </RefContext>
+    );
+};
+
 
 export default UseGlobalContext;

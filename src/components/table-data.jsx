@@ -14,17 +14,16 @@ import DeleteItem from "./table-action-components/delete-item";
 import DownloadItem from "./table-action-components/download-item";
 import path from 'path';
 import { useSearchPathContext } from '../context/search-path';
-import { useBulkDeleteContext } from '../context/bulk-delete';
+import { useBulkSelectContext } from '../context/bulk-select';
 import { useConfirmationContext } from '../context/confirmation';
 import ContextManu from "./context-menu";
 import { useContextMenu } from '@/context/context-menu';
-import SelectionWrapper from "./selection-handler";
 
-const TableData = (props) => {
+function TableData (props){
 
     const context = useContext(RenameItemContext);
     const searchContext = useSearchPathContext();
-    const deleteContext = useBulkDeleteContext();
+    const deleteContext = useBulkSelectContext();
     const confirmation = useConfirmationContext();
     const currentPath = props.currentPath;
     const TABLE_HEADS = { "Filename": "", "Permissions": "hidden sm:table-cell", "Size": "hidden sm:table-cell", "Last Modified": "hidden sm:table-cell", "Actions": "" };
@@ -49,7 +48,7 @@ const TableData = (props) => {
     useEffect(() => {
 
         // Close context menu on click..
-        const handleContextMenyExit = () => {
+        const handleContextMenuExit = () => {
             let value = contextMenu.isVisible;
             if (value) {
                 contextMenu.setIsVisible(!value);
@@ -62,7 +61,7 @@ const TableData = (props) => {
             setRenameElement(fileName);
         }
 
-        window.addEventListener("click", handleContextMenyExit);
+        window.addEventListener("click", handleContextMenuExit);
         window.addEventListener("set:rename_ele", handleSetRename);
 
         // Get object length.
@@ -85,7 +84,7 @@ const TableData = (props) => {
 
         return () => {
             window.removeEventListener("set:rename_ele", handleSetRename)
-            window.removeEventListener("click", handleContextMenyExit);
+            window.removeEventListener("click", handleContextMenuExit);
         }
 
     }, [deleteContext.items])
@@ -257,10 +256,9 @@ const TableData = (props) => {
     }
 
     const tableNameItemProps = {
-        renameInputRef: props.renameInputRef,
         currentState: state.renaming,
         handleChangePath: props.handleChangePath,
-        handleSubmitRename: props.handleSubmitRename
+        handleSubmitRename: props.handleSubmitRename,
     }
 
     return (
@@ -307,7 +305,14 @@ const TableData = (props) => {
                                 <td>
                                     <Checkbox className='selectFile' onChange={handleChangeSelect} value={filePathName} />
                                 </td>
-                                <td className='flex py-4' onClick={() => handleClickToSelect(filePathName, index)}>
+                                <td 
+                                    className='flex py-4' 
+                                    onClick={(e) => {
+                                        if(file.type == 1) return false;
+
+                                        handleClickToSelect(filePathName, index)
+                                    }}
+                                >
                                     <TableNameItem
                                         fileInfo={file}
                                         {...tableNameItemProps}
@@ -347,7 +352,6 @@ const TableData = (props) => {
                                         {file.type !== 1 && (
                                             <DownloadItem fileName={file.name} />
                                         )}
-
                                     </div>
                                 </td>
                             </tr>

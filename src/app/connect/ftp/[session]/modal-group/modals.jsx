@@ -1,7 +1,7 @@
-import UploadFilesDialog from "../../../../../components/dialogs/upload-files-dialog"
-import CreateItemDialog from "../../../../../components/dialogs/create-item";
-import ImportHotToast from "../../../../../components/import-toaster";
-import CheckConnection from "../../../../../components/check-connection";
+import UploadFilesDialog from "@/components/dialogs/upload-files-dialog"
+import CreateItemDialog from "@/components/dialogs/create-item";
+import ImportHotToast from "@/components/import-toaster";
+import CheckConnection from "@/components/check-connection";
 
 export default function Dialogs() {
     return (
@@ -17,6 +17,7 @@ export default function Dialogs() {
 
             {/* Internet connection Footer */}
             <CheckConnection />
+
         </div>
     )
 }

@@ -16,18 +16,18 @@ import {
     bulkDelete,
     uploadFile,
     downloadFile,
-    copy
+    move
 } from './api';
 // Request schema
 import {
     renameSchema,
     fetchSchema,
     createSchema,
-    copyFileSchema,
     deleteSchema,
     bulkDeleteSchema,
     uploadSchema,
-    getFileSchema
+    getFileSchema,
+    moveFileSchema
 } from "./requet-schema";
 import { NextResponse } from "next/server";
 
@@ -60,9 +60,9 @@ const VALID_ACTIONS = {
         schema: getFileSchema,
         func: downloadFile
     },
-    "copy": {
-        schema: copyFileSchema,
-        func: copy
+    "move": {
+        schema: moveFileSchema,
+        func: move
     }
 };
 
@@ -144,9 +144,9 @@ export async function POST(request, res) {
         if (responseData.success) {
             await ftpDestroy(); //Destroy Ftp connection
 
-            if(responseData?.blob !== undefined){
-                return sendResponse(responseData.blob, responseData.status || 200, responseData?.headers || null);
-            } else{
+            if (responseData?.stream !== undefined) {
+                return sendResponse(responseData.stream, responseData.status || 200, responseData?.headers || null, true);
+            } else {
                 return sendResponse(responseData, responseData.status || 200);
             }
         }
@@ -175,21 +175,21 @@ function validateAction(action) {
  * @param {string|object} res 
  * @param {number} status 
  */
-function sendResponse(res, status, responseHeader = null) {
+function sendResponse(res, status, responseHeader = null, isStream = false) {
     let headers = {
         headers: {
             'Content-Type': "application/json"
         }
     }
 
-    if(responseHeader !== null && typeof responseHeader == "object"){
+    if (responseHeader !== null && typeof responseHeader == "object") {
         headers = responseHeader;
     }
 
-    if(res instanceof Blob !== true){
+    if (!isStream) {
         res = JSON.stringify(res)
     }
-    
+
     const response = new NextResponse(res, {
         headers: headers,
         status: status
