@@ -31,10 +31,9 @@ function Editor({ code, lang, handleChange, handleClick }, ref) {
             <VsEditor
                 onChange={handleChange}
                 theme="vs-dark"
-                language={lang}
+                language={lang || "text"}
                 value={code}
                 onMount={handleMount}
-                defaultLanguage="text"
             />
             <button
                 onClick={handleClick}

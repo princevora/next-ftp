@@ -32,7 +32,7 @@ function LoadFile({ path, data }) {
                 const fileExtension = path.split('.').pop();
 
                 // Map the file extension to a Monaco language
-                const lang = langMap.languages(fileExtension).filter((ex) => ex.includes(fileExtension))[0] || 'plaintext';
+                const lang = langMap.languages(fileExtension)[0] || 'plaintext';
 
                 let contentType = rsp.headers.get("Content-Type");
 
