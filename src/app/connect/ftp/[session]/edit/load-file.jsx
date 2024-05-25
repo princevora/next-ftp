@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { loadFile } from "../preview/load-file";
-import { Editor } from "@monaco-editor/react";
+import langMap from 'lang-map';
+import PreviewSpinner from "@/components/spinner";
+import Editor from "./editor";
+import { getRootUrl } from "@/helper";
+import pathModule from "path";
+import toast from "react-hot-toast";
 
 function LoadFile({ path, data }) {
     const [state, setState] = useState({
@@ -8,12 +13,46 @@ function LoadFile({ path, data }) {
         isLoaded: false,
         url: "",
         code: "",
-        land: "plaintext"
+        lang: "plaintext",
+        isBlobLoaded: false,
+        contentType: "text/plain"
     })
     const { ftp_username, ftp_password, ftp_port, ftp_host } = data;
 
+    const loadFileText = async () => {
+        await fetch(state.url)
+            .then(async (rsp) => {
+                const text = await rsp.text();
+                let value = text !== "" ? text : "";
+
+                // Extract the file extension from the URL
+                const fileExtension = path.split('.').pop();
+
+                // Map the file extension to a Monaco language
+                const lang = langMap.languages(fileExtension)[0] || 'plaintext';
+
+                let contentType = rsp.headers.get("Content-Type");
+
+                setState(prev => ({
+                    ...prev,
+                    code: value,
+                    lang,
+                    contentType,
+                    isBlobLoaded: true
+                }))
+            });
+    }
+
     useEffect(() => {
-        loadFile(ftp_host, ftp_username, ftp_password, ftp_port, path, (data) => {
+        setState(prev => ({
+            ...prev,
+            progress: 0,
+        }));
+
+        const abortController = new AbortController();
+        const { signal } = abortController;
+
+        loadFile(ftp_host, ftp_username, ftp_password, ftp_port, path, signal, (data) => {
             const { progress } = data;
             const isLoaded = data?.isLoaded || false;
 
@@ -28,25 +67,74 @@ function LoadFile({ path, data }) {
                 url
             }))
         });
-
-        const loadFileText = async () => {
-            const response = await fetch(state.url);
-            const value = await response.text();
-            const contentType = response.headers.get("Content-Type").split("/").pop();
-
-            setState(prev => ({
-                ...prev,
-                code: value,
-                lang: contentType
-            }))
-        }
-
-        loadFileText();
-
     }, []);
 
+    useEffect(() => {
+        if (state.isLoaded) {
+            loadFileText()
+        }
+    }, [state.isLoaded]);
+
+    const handleChange = (code) => {
+        setState(prev => ({
+            ...prev,
+            code
+        }));
+    }
+
+    const saveFile = () => new Promise(async (resolve, reject) => {
+        // Create request to upload the file
+        const ednpoint = getRootUrl() + "/api/ftp";
+
+        const currentPath = pathModule.dirname(path);
+
+        const formData = new FormData();
+        formData.append("host", ftp_host);
+        formData.append("user", ftp_username);
+        formData.append("pass", ftp_password);
+        formData.append("port", ftp_port);
+        formData.append("path", currentPath);
+        formData.append("action", "upload");
+
+        const fileName = pathModule.basename(path);
+
+        const content = state.code || " ";
+
+        // Create file.
+        const blob = new Blob([content])
+        const file = new File([blob], fileName);
+
+        // append file.
+        formData.append("file", file);
+
+        const response = await fetch(ednpoint, {
+            method: "POST",
+            body: formData
+        })
+
+        if(!response.ok){
+            const json = await response.json();
+
+            reject(json?.data?.message);
+        } else {
+            resolve("File has been saved successfully");
+        }
+    })
+
+    const handleClick = async () => {
+        const response = saveFile();
+
+        toast.promise(response, {
+            loading: "Saving file",
+            success: (msg) => msg,
+            error: (err) => err
+        });
+    }
+
     return (
-        <Editor theme="vs-dark" language={state.lang} value={state.code} height="100vh" />
+        !state.isLoaded && !state.isBlobLoaded
+            ? <PreviewSpinner progress={state.progress} />
+            : <Editor code={state.code} lang={state.lang} handleChange={handleChange} handleClick={handleClick} />
     )
 }
 

@@ -81,29 +81,13 @@ export default function FilePermsDialog({ handleClick, fileName, permissionData,
                                             </Typography>
                                         </td>
                                         <td className="p-4">
-                                                <Checkbox defaultChecked={permissionData.userPermissions.read}/>
+                                                <Checkbox defaultChecked={permissionData.userPermissions.read} disabled/>
                                         </td>
                                         <td className="p-4">
-                                            <Checkbox defaultChecked={permissionData.userPermissions.write} />
+                                            <Checkbox defaultChecked={permissionData.userPermissions.write} disabled/>
                                         </td>
                                         <td className="p-4">
-                                            <Checkbox defaultChecked={permissionData.userPermissions.exec}/>
-                                        </td>
-                                    </tr>
-                                    <tr className="even:bg-blue-gray-50/50">
-                                        <td className="p-4">
-                                            <Typography variant="small" color="blue-gray" className="font-normal">
-                                                Owner
-                                            </Typography>
-                                        </td>
-                                        <td className="p-4">
-                                                <Checkbox defaultChecked={permissionData.groupPermissions.read}/>
-                                        </td>
-                                        <td className="p-4">
-                                            <Checkbox defaultChecked={permissionData.groupPermissions.write} />
-                                        </td>
-                                        <td className="p-4">
-                                            <Checkbox defaultChecked={permissionData.groupPermissions.exec}/>
+                                            <Checkbox defaultChecked={permissionData.userPermissions.exec} disabled/>
                                         </td>
                                     </tr>
                                     <tr className="even:bg-blue-gray-50/50">
@@ -113,13 +97,29 @@ export default function FilePermsDialog({ handleClick, fileName, permissionData,
                                             </Typography>
                                         </td>
                                         <td className="p-4">
-                                                <Checkbox defaultChecked={permissionData.otherPermissions.read}/>
+                                                <Checkbox defaultChecked={permissionData.groupPermissions.read} disabled/>
                                         </td>
                                         <td className="p-4">
-                                            <Checkbox defaultChecked={permissionData.otherPermissions.write} />
+                                            <Checkbox defaultChecked={permissionData.groupPermissions.write} disabled/>
                                         </td>
                                         <td className="p-4">
-                                            <Checkbox defaultChecked={permissionData.otherPermissions.exec}/>
+                                            <Checkbox defaultChecked={permissionData.groupPermissions.exec} disabled/>
+                                        </td>
+                                    </tr>
+                                    <tr className="even:bg-blue-gray-50/50">
+                                        <td className="p-4">
+                                            <Typography variant="small" color="blue-gray" className="font-normal">
+                                                Owner
+                                            </Typography>
+                                        </td>
+                                        <td className="p-4">
+                                                <Checkbox defaultChecked={permissionData.otherPermissions.read} disabled/>
+                                        </td>
+                                        <td className="p-4">
+                                            <Checkbox defaultChecked={permissionData.otherPermissions.write} disabled/>
+                                        </td>
+                                        <td className="p-4">
+                                            <Checkbox defaultChecked={permissionData.otherPermissions.exec} disabled/>
                                         </td>
                                     </tr>
                                 </tbody>

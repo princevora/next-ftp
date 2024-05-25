@@ -26,8 +26,11 @@ function LoadFile({ path, type, data }) {
         }));
 
         // Load the file
-        loadFile(ftp_host, ftp_username, ftp_password, ftp_port, path, (data) => {
-            const { progress } = data; 
+        const abortController = new AbortController();
+        const { signal } = abortController;
+
+        loadFile(ftp_host, ftp_username, ftp_password, ftp_port, path, signal, (data) => {
+            const { progress } = data;
             const isLoaded = data?.isLoaded || false;
 
             setState(prev => ({
@@ -41,6 +44,14 @@ function LoadFile({ path, type, data }) {
                 url
             }))
         });
+
+        return () => {
+            try {
+                abortController.abort();
+            } catch (error) {
+                console.log("err");
+            }
+        }
     }, []);
 
     return (
@@ -50,28 +61,31 @@ function LoadFile({ path, type, data }) {
     )
 }
 
-export const loadFile = (ftp_host, ftp_username, ftp_password, ftp_port, path, getProgress) => new Promise(async (resolve, reject) => {
+export const loadFile = (ftp_host, ftp_username, ftp_password, ftp_port, path, signal, getProgress) => new Promise(async (resolve, reject) => {
     const bodyData = { host: ftp_host, user: ftp_username, pass: ftp_password, port: ftp_port, action: "get_file", path }
     // create api url
     const endpoint = getRootUrl() + "/" + "api/ftp";
 
-    // Fetch file blob.
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(bodyData)
-    });
+    try {
+        // Fetch file blob.
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(bodyData),
+            signal
+        });
 
-    if (!response.ok) {
-        //Get json data
-        const json = await response.json();
+        if (!response.ok) {
+            //Get json data
+            const json = await response.json();
 
-        toast.error(json?.data?.message || "Unable to fetch file");
-    }
+            toast.error(json?.data?.message || "Unable to fetch file");
+            reject(new Error("Unable to fetch file"));
+            return;
+        }
 
-    else {
         const contentLength = response.headers.get('File-Size');
         const contentType = response.headers.get("Content-Type");
 
@@ -88,6 +102,12 @@ export const loadFile = (ftp_host, ftp_username, ftp_password, ftp_port, path, g
 
         // run while loop
         while (true) {
+            // Check if the request has been aborted
+            if (signal.aborted) {
+                reject(new Error('Request aborted'));
+                return;
+            }
+
             const { done, value } = await reader.read();
 
             // Break the loop if the the blob is loaded
@@ -121,7 +141,15 @@ export const loadFile = (ftp_host, ftp_username, ftp_password, ftp_port, path, g
 
         // Return Resolve
         resolve(url);
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            // Request was aborted
+            reject('Request aborted');
+        } else {
+            reject(error);
+        }
     }
-})
+});
+
 
 export default LoadFile;
