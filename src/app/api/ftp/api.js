@@ -255,20 +255,10 @@ export const getFile = (path) => new Promise(async (resolve, reject) => {
         const stream = new PassThrough();
         socket.pipe(stream);
 
-        // socket.on("error", () => {
-        //     reject(sendObjRes("Can't resolve Stream, Unable to download file."));
-        // })
+        socket.on("error", () => {
+            reject(sendObjRes("Can't resolve Stream, Unable to download file.", 500, true));
+        })
 
-        // let chunks = [];
-
-        // socket.on("data", (buffer) => {
-        //     chunks.push(buffer);
-        // })
-
-        // socket.on("close", () => {
-        //     console.log("Lem: ", chunks.length);
-
-        // })
         resolve(stream);
 
     });

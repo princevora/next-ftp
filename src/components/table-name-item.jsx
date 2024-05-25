@@ -79,7 +79,7 @@ const TableNameItem = (props) => {
             <>
                 <ItemIcon fileName={name} fileType={type} />
                 <Typography variant="small" color="blue-gray" className="font-normal px-2">
-                    <Link href={isMedia ? previewHref : editHref} prefetch shallow>
+                    <Link href={isMedia ? previewHref : editHref} prefetch shallow target="_blank">
                         {printName(name)}
                     </Link>
                 </Typography>

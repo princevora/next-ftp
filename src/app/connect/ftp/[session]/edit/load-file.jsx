@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadFile } from "../preview/load-file";
 import langMap from 'lang-map';
 import PreviewSpinner from "@/components/spinner";
@@ -17,6 +17,9 @@ function LoadFile({ path, data }) {
         isBlobLoaded: false,
         contentType: "text/plain"
     })
+
+    const ref = useRef();
+
     const { ftp_username, ftp_password, ftp_port, ftp_host } = data;
 
     const loadFileText = async () => {
@@ -29,7 +32,7 @@ function LoadFile({ path, data }) {
                 const fileExtension = path.split('.').pop();
 
                 // Map the file extension to a Monaco language
-                const lang = langMap.languages(fileExtension)[0] || 'plaintext';
+                const lang = langMap.languages(fileExtension).filter((ex) => ex.includes(fileExtension))[0] || 'plaintext';
 
                 let contentType = rsp.headers.get("Content-Type");
 
@@ -75,11 +78,8 @@ function LoadFile({ path, data }) {
         }
     }, [state.isLoaded]);
 
-    const handleChange = (code) => {
-        setState(prev => ({
-            ...prev,
-            code
-        }));
+    const handleChange = () => {
+        const code = ref.current.getValue();
     }
 
     const saveFile = () => new Promise(async (resolve, reject) => {
@@ -97,8 +97,12 @@ function LoadFile({ path, data }) {
         formData.append("action", "upload");
 
         const fileName = pathModule.basename(path);
+        const codeContent = ref.current.getValue();
 
-        const content = state.code || " ";
+        let content = " ";
+        if(codeContent !== ""){
+            content = codeContent;
+        }
 
         // Create file.
         const blob = new Blob([content])
@@ -134,7 +138,13 @@ function LoadFile({ path, data }) {
     return (
         !state.isLoaded && !state.isBlobLoaded
             ? <PreviewSpinner progress={state.progress} />
-            : <Editor code={state.code} lang={state.lang} handleChange={handleChange} handleClick={handleClick} />
+            : <Editor 
+                    ref={ref}
+                    code={state.code} 
+                    lang={state.lang} 
+                    handleChange={handleChange} 
+                    handleClick={handleClick} 
+                />
     )
 }
 
