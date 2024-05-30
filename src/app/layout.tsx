@@ -38,9 +38,10 @@ export default function RootLayout({
           referrerPolicy="no-referrer"
         />
         <link rel="shortcut icon" href="/favicon.png" type="image/png" />
+        <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/dialog.js" async></script>
       </head>
       <body className={roboto.className}>
-        <NextTopLoader speed={500}/>
+        <NextTopLoader speed={500} />
         <UseGlobalContext>
           <Layout>
             {children}

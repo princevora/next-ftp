@@ -15,11 +15,6 @@ import Script from "next/script";
 export default function FilePermsDialog({ handleClick, fileName, permissionData, open }) {
     return (
         <>
-            {/* Add The Modal Script */}
-            <Script>
-                <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/dialog.js" async></script>
-            </Script>
-
             <Dialog size="md" open={open} handler={handleClick}>
                 <DialogHeader className="justify-between">
                     <IconButton
