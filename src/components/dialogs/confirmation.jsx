@@ -1,5 +1,4 @@
 import { useConfirmationContext } from "../../context/confirmation";
-import { RenameItemContext } from "../../context/RenameItemContext";
 import React, { useRef } from "react";
 import {
     Button,
