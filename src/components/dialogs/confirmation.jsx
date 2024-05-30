@@ -1,6 +1,6 @@
 import { useConfirmationContext } from "../../context/confirmation";
 import { RenameItemContext } from "../../context/RenameItemContext";
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import {
     Button,
     Dialog,
@@ -8,9 +8,8 @@ import {
     DialogBody,
     DialogFooter,
 } from "@material-tailwind/react";
-import { Html } from "next/document";
 
-export default function Confirmation({ handleOnConfirm }) {
+export default function Confirmation() {
 
     const context = useConfirmationContext();
     const open = context.state.isVisible;
