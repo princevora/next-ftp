@@ -5,13 +5,13 @@
 
 To get started, run the following command to install libraries:
 
-```sh
+```
 npm install 
 ```
 
 or 
 
-```sh
+```
 npm i 
 ```
 
