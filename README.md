@@ -16,7 +16,7 @@ npm i
 ```
 
 Now run the development Server - Nextjs.
-```sh
+```
 npm run dev 
 ```
 
