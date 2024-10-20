@@ -17,6 +17,11 @@ const TableNameItem = (props) => {
     const ref = useRefcontext();
     let redirectURL = window?.location?.pathname;
 
+    useEffect(() => {
+        console.log(props.fileInfo);
+
+    }, []);
+
     const handleChange = (e) => {
         const fromPath = path.join(currentPath, props.fileInfo.name);
         const inputValue = e.target.value;
@@ -67,7 +72,7 @@ const TableNameItem = (props) => {
                 path: currentFilePath
             }
         };
-        
+
         const editHref = !isMedia && {
             pathname: redirectURL + "/edit",
             query: {
@@ -91,15 +96,17 @@ const TableNameItem = (props) => {
         return fileName.length > 32 ? fileName.substring(0, 32) + "..." : fileName;
     };
 
+
     return (
         <>
             {props.fileInfo.name === props.currentState.name && props.currentState.isRenaming ? (
                 showInput(props.fileInfo.name, handleChange)
-            ) : props.fileInfo.type === 1 ? (
-                nameWithLink(props.fileInfo.name, props.fileInfo.type)
-            ) : (
+            ) : props.fileInfo.type == 0 ? (
                 name(props.fileInfo.name, props.fileInfo.type)
-            )}
+            ) : (
+                    nameWithLink(props.fileInfo.name, props.fileInfo.type)
+                )
+            }
         </>
     );
 };

@@ -48,6 +48,8 @@ export const fetchFiles = async () => {
         // Fetch files if login gets success.
         const ftp_files = await getFtpFIles();
 
+        // console.log(ftp_files);
+        
         // Send files
         return sendObjRes({ ftp_files }, 200, false)
 

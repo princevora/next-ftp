@@ -2,6 +2,9 @@ export default function ItemIcon({ fileType = 0, fileName }) {
     if (fileType === 1) {
         return <Icon className="fa-solid fa-folder" />;
     }
+    if(fileType === 2) {
+        return <Icon className="fa-solid fa-folder-tree" />;
+    }
 
     const EXTENSION = fileName.split(".").pop();
 
