@@ -40,6 +40,7 @@ function FtpDataForm({ handleChange, handleSubmit, formState }) {
                         name="ftp_password"
                         label="Ftp Password"
                         size="lg"
+                        type="password"
                         onChange={handleChange}
                     />
                     <Input
