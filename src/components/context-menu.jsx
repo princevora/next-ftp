@@ -45,13 +45,13 @@ export default function ContextMenu() {
         const fromPath = path.join(currentPath, fileName);
         // selectContext.setItems({});
         selectContext.setIsItemsMoving(true);
-        selectContext.setMovableItems({[fromPath]: type});
+        selectContext.setMovableItems({ [fromPath]: type });
         // moveItemContext.setFromPath(fromPath);
         // context.setIsVisible(false);
     }
 
     let fileName;
-    if(context.element && context.isVisible){
+    if (context.element && context.isVisible) {
         fileName = context.element.name;
     }
 
@@ -60,20 +60,20 @@ export default function ContextMenu() {
         <Card className="absolute z-20 w-72" style={{ top: `${context.position.y}px`, left: `${context.position.x}px` }}>
             <ul>
                 <li className="p-3 flex gap-1 cursor-pointer hover:bg-base-200 hover:rounded-md">
-                    <RenameItem className="py-1 px-1" fileName={fileName} setRenameElement={setRenameElement} />
-                    Rename
+                    <RenameItem className="py-1 px-1" label="Rename" fileName={fileName} setRenameElement={setRenameElement} />
                 </li>
                 <li className="p-3 flex gap-1 cursor-pointer hover:bg-base-200 hover:rounded-md">
-                    <DeleteItem className="py-1 px-1" fileName={fileName} type={context.element.type} />
-                    Delete
+                    <DeleteItem className="py-1 px-1" label="Delete" fileName={fileName} type={context.element.type} />
                 </li>
                 <li className="p-3 flex gap-2 cursor-pointer hover:bg-base-200 hover:rounded-md">
-                    <DownloadItem fileName={fileName} />
-                    Download
+                    <DownloadItem label="Download" fileName={fileName} />
                 </li>
-                <li className="p-3 flex gap-2 cursor-pointer hover:bg-base-200 hover:rounded-md" onClick={() => handleMoveItem(fileName, context.element.type)}>
+                <li className="p-3 flex gap-2 cursor-pointer hover:bg-base-200 hover:rounded-md flex items-center w-full" onClick={() => handleMoveItem(fileName, context.element.type)}>
                     <ArrowLeftOnRectangleIcon width={15} height={20} />
-                    Move
+
+                    <Typography as="h3" variant="small" color="blue-gray" className="font-medium">
+                        Move
+                    </Typography>
                 </li>
             </ul>
         </Card>

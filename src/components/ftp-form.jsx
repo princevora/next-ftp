@@ -7,6 +7,19 @@ import {
 } from "@material-tailwind/react";
 
 function FtpDataForm({ handleChange, handleSubmit, formState }) {
+    const validItems = ['ftp_port', 'ftp_host', 'ftp_username', 'ftp_password'];
+
+    const isAnyFieldEmpty = validItems.some(
+        (field) => {
+            const value = formState[field];
+            if (typeof value == "string") {
+                return value.trim() === ""
+            }
+
+            return [null, undefined, ''].includes(value);
+        }
+    )
+
     return (
         <form onSubmit={handleSubmit}>
             <Card className="w-96 shadow-2xl mt-4">
@@ -38,10 +51,15 @@ function FtpDataForm({ handleChange, handleSubmit, formState }) {
                     />
                 </CardBody>
                 <CardFooter className="pt-3">
-                    {/* {console.log(formState.isSubmitted.toString())} */}
-                    <Button type="submit" variant="gradient" fullWidth className="flex gap-2 justify-center" disabled={formState.isSubmitted}>
+                    <Button
+                        type="submit"
+                        variant="gradient"
+                        fullWidth
+                        className="flex gap-2 justify-center"
+                        disabled={formState.isSubmitted || isAnyFieldEmpty}
+                    >
                         {
-                            formState.isSubmitted && 
+                            formState.isSubmitted &&
                             <span className="loading loading-xs loading-spinner"></span>
                         }
 

@@ -1,9 +1,9 @@
 {
-  "name": "next-chat",
+  "name": "next-ftp",
   "version": "1.0.0",
   "private": true,
-  "license": "See license in https://www.creative-tim.com/license",
-  "homepage": "https://demos.creative-tim.com/nextjs-tailwind-blog-posts-page",
+  "license": "MIT",
+  "homepage": "https://next-ftp-app.vercel.app/",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

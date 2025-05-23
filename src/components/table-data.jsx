@@ -349,7 +349,7 @@ function TableData (props){
                                         <RenameItem fileName={file.name} setRenameElement={setRenameElement} />
                                         <DeleteItem fileName={file.name} type={file.type} />
 
-                                        {file.type !== 1 && (
+                                        {file.type !== 1 && file.type !== 2 && (
                                             <DownloadItem fileName={file.name} />
                                         )}
                                     </div>

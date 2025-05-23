@@ -9,6 +9,7 @@ import ImportHotToast from '@/components/import-toaster';
 import CryptoJs from "crypto-js";
 import { usePasswordContext } from '@/context/encrypt-password';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const FtpForm = () => {
     const [formData, setFormData] = useState({
@@ -42,6 +43,16 @@ const FtpForm = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const { ftp_host, ftp_username, ftp_password, ftp_port } = formData;
+
+        if(!ftp_host || !ftp_username || !ftp_password || !ftp_port){
+            setFormData(prev => ({
+                ...prev,
+                isSubmitted: false
+            }));
+            
+            return toast.error('You must provide the credentials to proceed')
+        }
+
         const data = { ftp_host, ftp_username, ftp_password, ftp_port };
         let eData = CryptoJs.AES.encrypt(JSON.stringify(data), password).toString(); //Encrypted Form Of Data
 

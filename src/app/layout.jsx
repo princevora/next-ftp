@@ -1,5 +1,4 @@
 import "./globals.css";
-import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { Layout } from "@/components";
 import UseGlobalContext from "@/context/all-context-provider";
@@ -13,7 +12,7 @@ const roboto = Roboto({
   display: "swap",
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: {
     default: "Online Ftp Solution",
     template: "%s | Next-FTP"
@@ -24,8 +23,6 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode;
 }) {
   return (
     <html lang="en" data-theme="light">

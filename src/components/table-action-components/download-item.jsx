@@ -10,7 +10,7 @@ import path from "path";
 import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
 
-export default function DownloadItem({ fileName, className = "" }) {
+export default function DownloadItem({ fileName, className = "", label = "" }) {
 
     const ftpContext = useFtpDetailsContext().state;
 
@@ -144,14 +144,18 @@ export default function DownloadItem({ fileName, className = "" }) {
     }
 
     return (
-        <Typography as="a" href="#" variant="small" color="blue-gray" className={`font-medium ${className}`}>
+        <Typography onClick={handleClick} as="a" href="#" variant="small" color="blue-gray" className={`font-medium ${className} ${label && 'flex items-center gap-2 w-full'}`}>
             <Tooltip content={`Download: ${fileName}`}>
                 <ArrowDownTrayIcon
-                    onClick={handleClick}
                     height={20}
                     width={15}
                 />
             </Tooltip>
+            {label && (
+                <Typography as="h3" variant="small" color="blue-gray" className="font-medium">
+                    {label}
+                </Typography>
+            )}
         </Typography>
     )
 }
